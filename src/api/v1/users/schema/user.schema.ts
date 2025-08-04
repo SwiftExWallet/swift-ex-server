@@ -18,7 +18,10 @@ export class User {
   phoneNumber: string;
 
   @Prop({ type: String, select: false })
-  password: string;
+  passcode: string;
+
+  @Prop({ required: false, default: null })
+  streamId?: string;
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);

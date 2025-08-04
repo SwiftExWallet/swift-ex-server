@@ -5,5 +5,6 @@ import { HttpService } from './http.service';
 
 @Module({
   providers: [AlchemyService, UrlSigner, HttpService],
+  exports: [HttpService],
 })
 export class AlchemyModule {}

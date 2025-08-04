@@ -13,6 +13,10 @@ import { JwtModule } from '@nestjs/jwt';
 import { AuthModule } from './api/v1/auth/auth.module';
 import { MailModule } from './api/v1/mail/mail.module';
 import { AlchemyModule } from './api/v1/alchemy/alchemy.module';
+import { WalletModule } from './api/v1/wallet/wallet.module';
+import { StellarModule } from './api/v1/stellar/stellar.module';
+import { WatcherModule } from './api/v1/watcher/watcher.module';
+import { NotificationModule } from './api/v1/notification/notification.module';
 @Module({
   imports: [
     ConfigModule.forRoot(),
@@ -53,6 +57,10 @@ import { AlchemyModule } from './api/v1/alchemy/alchemy.module';
     AuthModule,
     MailModule,
     AlchemyModule,
+    WalletModule,
+    StellarModule,
+    WatcherModule,
+    NotificationModule,
   ],
   controllers: [AppController],
   providers: [AppService],

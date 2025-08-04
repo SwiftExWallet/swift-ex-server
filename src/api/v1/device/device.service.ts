@@ -5,18 +5,24 @@ import mongoose from 'mongoose';
 import { CreateDeviceDto } from './dto/create-device.dto';
 import { UpdateFcmTokenDto } from './dto/update-fcm-token.dto';
 import { User } from '../users/schema/user.schema';
+import { JwtService } from '@nestjs/jwt';
 
 @Injectable()
 export class DeviceService {
-  constructor(private readonly deviceRepo: DeviceRepository) {}
+  constructor(
+    private readonly deviceRepo: DeviceRepository,
+    private readonly jwtService: JwtService,
+  ) {}
 
-  async create(createDeviceDto: CreateDeviceDto): Promise<Device | null> {
+  async create(createDeviceDto: CreateDeviceDto): Promise<string> {
     const { uniqueId, fcmToken } = createDeviceDto;
-    const device: Device | null = await this.deviceRepo.findOne({ uniqueId });
+    let device: Device | null = await this.deviceRepo.findOne({ uniqueId });
     if (device) {
-      return this.deviceRepo.updateFcmToken(device._id, fcmToken);
+      await this.deviceRepo.updateFcmToken(device._id, fcmToken);
+    } else {
+      device = await this.deviceRepo.create(createDeviceDto);
     }
-    return this.deviceRepo.create(createDeviceDto);
+    return this.jwtService.sign(JSON.stringify({ _id: device?._id }));
   }
 
   async updateFcmToken(
