@@ -10,6 +10,7 @@ import Moralis from 'moralis';
 import { AlchemyMethod } from '../../../common/enum/alchemy.enum';
 import { HttpService } from '../alchemy/http.service';
 import { User } from '../users/schema/user.schema';
+import { Wallet } from '../wallet/schema/wallet.schema';
 
 @Injectable()
 export class WatcherService implements OnModuleInit {
@@ -47,11 +48,11 @@ export class WatcherService implements OnModuleInit {
   }
 
   async addWalletToMoralis(
-    walletAddress: string,
+    wallet: Wallet,
     user: User,
     fcmToken: string,
   ): Promise<any> {
-    if (!user.streamId) {
+    if (!wallet.streamId) {
       this.logger.log('called when streamId not available');
       // creating new stream
       const encrypted = await this.encryptMessageToString(fcmToken);
@@ -65,7 +66,7 @@ export class WatcherService implements OnModuleInit {
 
       await Moralis.Streams.addAddress({
         id: stream.toJSON().id,
-        address: [walletAddress],
+        address: [wallet.multiChainAddress],
       });
       return {
         newStream: true,
@@ -75,19 +76,19 @@ export class WatcherService implements OnModuleInit {
       this.logger.log('called when streamId avilable ---0');
       const stream = await Moralis.Streams.getAddresses({
         limit: 10,
-        id: user.streamId,
+        id: wallet.streamId,
       });
       if (!stream || !stream.raw || stream.raw.total === 0) {
         this.logger.error('No addresses found in this stream');
         throw new NotFoundException('No addresses found in this stream');
       }
       await Moralis.Streams.deleteAddress({
-        id: user.streamId,
+        id: wallet.streamId,
         address: stream.raw.result[0].address,
       });
       await Moralis.Streams.addAddress({
-        id: user.streamId,
-        address: [walletAddress],
+        id: wallet.streamId,
+        address: [wallet.multiChainAddress],
       });
       return {
         newStream: false,

@@ -30,7 +30,7 @@ export class AuthTokenMiddleware implements NestMiddleware {
     if (!decodedToken) {
       throw new HttpException('Invalid token', HttpStatus.FORBIDDEN);
     }
-    const user = await this.userService.findOne(decodedToken.id);
+    const user = await this.userService.findOne({ _id: decodedToken._id });
     if (!user) {
       throw new HttpException('Invalid token', HttpStatus.FORBIDDEN);
     }

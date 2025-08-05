@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { MiddlewareConsumer, Module, RequestMethod } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { ConfigModule } from '@nestjs/config';
@@ -17,6 +17,8 @@ import { WalletModule } from './api/v1/wallet/wallet.module';
 import { StellarModule } from './api/v1/stellar/stellar.module';
 import { WatcherModule } from './api/v1/watcher/watcher.module';
 import { NotificationModule } from './api/v1/notification/notification.module';
+import { DeviceAuthTokenMiddleware } from './common/middleware/device-auth-token-middleware';
+import { AuthTokenMiddleware } from './common/middleware/auth-token.middleware';
 @Module({
   imports: [
     ConfigModule.forRoot(),
@@ -49,7 +51,7 @@ import { NotificationModule } from './api/v1/notification/notification.module';
     JwtModule.register({
       global: true,
       secret: process.env.JWT_SECRET,
-      signOptions: { expiresIn: '1s' },
+      signOptions: { expiresIn: '7d' },
       verifyOptions: { ignoreExpiration: false },
     }),
     UsersModule,
@@ -65,4 +67,42 @@ import { NotificationModule } from './api/v1/notification/notification.module';
   controllers: [AppController],
   providers: [AppService],
 })
-export class AppModule {}
+export class AppModule {
+  configure(consumer: MiddlewareConsumer): any {
+    consumer
+      .apply(DeviceAuthTokenMiddleware)
+      .exclude(
+        {
+          path: '/api/v1/device',
+          method: RequestMethod.POST,
+        },
+        {
+          path: '/api/v1/device/:uniqueId/unique-id',
+          method: RequestMethod.GET,
+        },
+      )
+      .forRoutes('*');
+
+    consumer
+      .apply(AuthTokenMiddleware)
+      .exclude(
+        {
+          path: '/api/v1/device',
+          method: RequestMethod.POST,
+        },
+        {
+          path: '/api/v1/device/update-fcm-token',
+          method: RequestMethod.POST,
+        },
+        {
+          path: '/api/v1/device/update-fcm-token',
+          method: RequestMethod.POST,
+        },
+        {
+          path: '/api/v1/device/:uniqueId/unique-id',
+          method: RequestMethod.GET,
+        },
+      )
+      .forRoutes('*');
+  }
+}

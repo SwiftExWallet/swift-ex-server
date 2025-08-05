@@ -48,4 +48,11 @@ export class WalletRepository {
   ): Promise<Wallet | null> {
     return this.walletModel.findByIdAndDelete({ _id }, { session });
   }
+
+  updateStreamId(
+    _id: mongoose.Schema.Types.ObjectId,
+    streamId: string,
+  ): Promise<Wallet | null> {
+    return this.walletModel.findByIdAndUpdate({ _id }, { $set: { streamId } });
+  }
 }

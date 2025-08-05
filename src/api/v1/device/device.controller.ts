@@ -19,38 +19,29 @@ export class DeviceController {
 
   @Post()
   async create(@Res() response, @Body() createDeviceDto: CreateDeviceDto) {
-    const device = await this.deviceService.create(createDeviceDto);
-    response.status(201).json({ device });
+    const deviceToken = await this.deviceService.create(createDeviceDto);
+    response.status(201).json({ deviceToken });
   }
 
-  @Get(':id')
-  async findOne(
+  @Patch('update-fcm-token')
+  async updateFcmToken(
+    @Req() req: any,
     @Res() response,
-    @Param('id') id: mongoose.Schema.Types.ObjectId,
-  ) {
-    const device = await this.deviceService.findOne(id);
-    return response.status(200).json({ device });
-  }
-
-  @Get(':uniqueId/unique-id')
-  async findOneByUniqueId(
-    @Res() response,
-    @Param('uniqueId') uniqueId: string,
-  ) {
-    const device = await this.deviceService.findOneByUniqueId(uniqueId);
-    return response.status(200).json({ device });
-  }
-
-  @Patch(':id//update-fcm-token')
-  updateFcmToken(
-    @Param('id') id: mongoose.Schema.Types.ObjectId,
     @Body() updateFcmTokenDto: UpdateFcmTokenDto,
   ) {
-    return this.deviceService.updateFcmToken(id, updateFcmTokenDto);
+    const device = await this.deviceService.updateFcmToken(
+      req.device._id,
+      updateFcmTokenDto,
+    );
+    return response.status(200).json({ device });
   }
 
-  @Patch(':id/update-user')
-  updateUser(@Req() req: any, @Param('id') id: mongoose.Schema.Types.ObjectId) {
-    return this.deviceService.updateUser(id, req.user);
+  @Patch('/update-user')
+  async updateUser(@Req() req: any, @Res() response) {
+    const device = await this.deviceService.updateUser(
+      req.device,
+      req.currentUser,
+    );
+    return response.status(200).json({ device });
   }
 }

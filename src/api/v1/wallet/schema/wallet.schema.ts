@@ -20,6 +20,9 @@ export class Wallet {
 
   @Prop({ type: Boolean, default: false })
   isPrimary: boolean;
+
+  @Prop({ required: false, default: null })
+  streamId?: string;
 }
 
 export const WalletSchema = SchemaFactory.createForClass(Wallet);

@@ -44,12 +44,26 @@ export class WalletController {
 
   @Get('user/')
   async findByUser(@Res() response, @Req() req: any) {
-    const wallets = await this.walletService.findWalletByUserId(req.user._id);
+    const wallets = await this.walletService.findWalletByUserId(
+      req.CurrentUser._id,
+    );
     return response.status(200).json({ wallets });
   }
 
   @Patch('assignUser')
   assignUser(@Req() req: any, @Param() stellarAddressDto: StellarAddressDto) {
-    return this.walletService.assignUser(stellarAddressDto, req.user);
+    return this.walletService.assignUser(stellarAddressDto, req.CurrentUser);
+  }
+
+  @Patch('activateWallet')
+  activateWallet(
+    @Req() req: any,
+    @Param() stellarAddressDto: StellarAddressDto,
+  ) {
+    return this.walletService.activateWallet(
+      stellarAddressDto,
+      req.device,
+      req.CurrentUser,
+    );
   }
 }

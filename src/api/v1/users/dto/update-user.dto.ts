@@ -1,7 +1,7 @@
-import { IsOptional, IsString } from 'class-validator';
+import { IsNotEmpty, IsOptional, IsString } from 'class-validator';
 
 export class UpdateUserDto {
-  @IsOptional()
+  @IsNotEmpty()
   @IsString()
   firstName?: string;
 
@@ -9,7 +9,9 @@ export class UpdateUserDto {
   @IsString()
   lastName?: string;
 
-  @IsOptional()
-  @IsString()
-  phoneNumber?: string;
+  @IsNotEmpty()
+  countryCode: string;
+
+  @IsNotEmpty()
+  phoneNumber: string;
 }

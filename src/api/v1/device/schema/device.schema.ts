@@ -8,7 +8,7 @@ export class Device {
   @Prop({
     type: mongoose.Schema.Types.ObjectId,
     ref: 'UserSchema',
-    required: true,
+    required: false,
   })
   userId: mongoose.Schema.Types.ObjectId;
 

@@ -111,6 +111,13 @@ export class WalletService {
         `Another address is already activated on this device`,
       );
     }
+    const wallet: Wallet | null = await this.walletRepo.findOne({
+      stellarAddress,
+      deviceId: device._id,
+    });
+    if (!wallet) {
+      throw new NotFoundException(`Wallet not found`);
+    }
     await this.stellarService.sendXlm(stellarAddress);
     await this.notificationService.sendNotification(device.fcmToken, {
       title: 'Activate',
@@ -120,11 +127,7 @@ export class WalletService {
       stellarAddress,
       device.fcmToken,
     );
-    await this.userService.updateUser(user, Object.assign(user, { streamId }));
-    await this.watcherService.addWalletToMoralis(
-      stellarAddress,
-      user,
-      device.fcmToken,
-    );
+    await this.walletRepo.updateStreamId(wallet?._id, streamId);
+    await this.watcherService.addWalletToMoralis(wallet, user, device.fcmToken);
   }
 }
