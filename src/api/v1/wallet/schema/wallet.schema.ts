@@ -12,6 +12,13 @@ export class Wallet {
   })
   userId: mongoose.Schema.Types.ObjectId;
 
+  @Prop({
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'DeviceSchema',
+    required: false,
+  })
+  deviceId: mongoose.Schema.Types.ObjectId;
+
   @Prop()
   multiChainAddress: string;
 

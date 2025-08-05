@@ -13,4 +13,7 @@ export class CreateWalletDto {
 
   @IsOptional()
   isPrimary: boolean;
+
+  @IsOptional()
+  deviceId: mongoose.Schema.Types.ObjectId;
 }

@@ -36,7 +36,7 @@ export class WatcherService implements OnModuleInit {
       additionalData: encrypted,
     });
     const headers = new AxiosHeaders();
-    headers.set('x-api-key', process.env.NOTIFICATION_WEBHOOK as string);
+    headers.set('x-api-key', process.env.SOROBAN_HOOKS_API_KEY as string);
     headers.set('Content-Type', 'application/json');
 
     return this.httpService.request({

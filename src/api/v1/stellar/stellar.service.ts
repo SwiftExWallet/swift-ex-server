@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import {
   Networks,
   Keypair,
@@ -10,6 +10,8 @@ import * as StellarSdk from '@stellar/stellar-sdk';
 
 @Injectable()
 export class StellarService {
+  private readonly logger = new Logger(StellarService.name);
+
   private server;
   private network: Networks;
   constructor() {
@@ -30,7 +32,14 @@ export class StellarService {
       sourceKeypair.publicKey(),
     );
 
-    const asset = this.server.Asset('USDC', process.env.STELLAR_ONE_TAP_ISSUER);
+    this.logger.log('===== getting asset ====');
+    // const asset = this.server.Asset('USDC', process.env.STELLAR_ONE_TAP_ISSUER);
+    const USDC = new StellarSdk.Asset(
+      'USDC',
+      process.env.STELLAR_ONE_TAP_ISSUER,
+    );
+
+    this.logger.log('===== building  transaction ====');
 
     const transaction = new TransactionBuilder(sourceAccount, {
       fee: await this.server.fetchBaseFee(),
@@ -45,7 +54,7 @@ export class StellarService {
       )
       .addOperation(
         Operation.changeTrust({
-          asset: asset,
+          asset: USDC,
           limit: '1000',
           source: stellarAddress,
         }),

@@ -102,6 +102,18 @@ export class AppModule {
           path: '/api/v1/device/:uniqueId/unique-id',
           method: RequestMethod.GET,
         },
+        {
+          path: '/api/v1/wallet',
+          method: RequestMethod.POST,
+        },
+        {
+          path: '/api/v1/wallet/:walletAddress/multiChain',
+          method: RequestMethod.GET,
+        },
+        {
+          path: '/api/v1/wallet/:stellarAddress/stellar',
+          method: RequestMethod.GET,
+        },
       )
       .forRoutes('*');
   }

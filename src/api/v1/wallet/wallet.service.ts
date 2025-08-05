@@ -32,45 +32,54 @@ export class WalletService {
     private readonly notificationService: FirebaseNotificationService,
   ) {}
 
-  async create(createWalletDto: CreateWalletDto): Promise<Wallet> {
+  async create(
+    createWalletDto: CreateWalletDto,
+    deviceId: mongoose.Schema.Types.ObjectId,
+  ): Promise<Wallet> {
     const { userId } = createWalletDto;
     if (userId) {
       const user: User | null = await this.userService.findOne({ _id: userId });
       if (!user) {
         throw new NotFoundException('User not found');
       }
+      createWalletDto = Object.assign(createWalletDto, { userId });
     }
-    return this.walletRepo.create(createWalletDto);
+    return this.walletRepo.create(Object.assign(createWalletDto, { deviceId }));
   }
 
   async findWalletByUserId(
     userId: mongoose.Schema.Types.ObjectId,
+    deviceId: mongoose.Schema.Types.ObjectId,
   ): Promise<Wallet[] | null> {
-    return this.walletRepo.find({ userId });
+    return this.walletRepo.find({ userId, deviceId });
   }
 
   async findByStellarAddress(
     stellarAddressDto: StellarAddressDto,
+    deviceId: mongoose.Schema.Types.ObjectId,
   ): Promise<Wallet[] | null> {
     const { stellarAddress } = stellarAddressDto;
 
-    return this.walletRepo.find({ stellarAddress });
+    return this.walletRepo.find({ stellarAddress, deviceId });
   }
 
   async findByMultiChainAddress(
     walletAddressDto: WalletAddressDto,
+    deviceId: mongoose.Schema.Types.ObjectId,
   ): Promise<Wallet[] | null> {
     const { walletAddress } = walletAddressDto;
-    return this.walletRepo.find({ multiChainAddress: walletAddress });
+    return this.walletRepo.find({ multiChainAddress: walletAddress, deviceId });
   }
 
   async assignUser(
     stellarAddressDto: StellarAddressDto,
     user: User,
+    deviceId: mongoose.Schema.Types.ObjectId,
   ): Promise<Wallet | null> {
     const { stellarAddress } = stellarAddressDto;
     let wallet: Wallet | null = await this.walletRepo.findOne({
       stellarAddress,
+      deviceId,
     });
     if (!wallet) {
       this.logger.log('===Stellar wallet found===');
@@ -82,7 +91,7 @@ export class WalletService {
       userId: user._id,
     });
     if (!userWallet) {
-      // if wallet not exist then assign current user
+      // if wallet does not exist then assign current user
       return this.walletRepo.assignUser(wallet._id, user._id);
     }
     // if wallet exist then delete the current wallet
@@ -118,16 +127,19 @@ export class WalletService {
     if (!wallet) {
       throw new NotFoundException(`Wallet not found`);
     }
-    await this.stellarService.sendXlm(stellarAddress);
+    this.logger.log('==== preparing transaction to send XLM to wallet==');
+    const xdr = await this.stellarService.sendXlm(stellarAddress);
     await this.notificationService.sendNotification(device.fcmToken, {
       title: 'Activate',
       body: `Congratulations! ${process.env.STELLAR_AMOUNT} XLM has been successfully added to your wallet.`,
     });
-    const streamId: string = await this.watcherService.addWalletWatcher(
-      stellarAddress,
+    await this.watcherService.addWalletWatcher(stellarAddress, device.fcmToken);
+    const streamId: string = await this.watcherService.addWalletToMoralis(
+      wallet,
+      user,
       device.fcmToken,
     );
     await this.walletRepo.updateStreamId(wallet?._id, streamId);
-    await this.watcherService.addWalletToMoralis(wallet, user, device.fcmToken);
+    return xdr;
   }
 }
