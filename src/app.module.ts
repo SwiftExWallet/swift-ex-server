@@ -39,7 +39,7 @@ import { AuthTokenMiddleware } from './common/middleware/auth-token.middleware';
       defaults: {
         from: '"SwiftEx" <' + process.env.GMAIL_EMAIL + '>',
       },
-      preview: true,
+      preview: false,
       template: {
         dir: path.join(__dirname, '/../', '/templates/'),
         adapter: new HandlebarsAdapter(), // or new PugAdapter() or new EjsAdapter()
@@ -86,6 +86,14 @@ export class AppModule {
     consumer
       .apply(AuthTokenMiddleware)
       .exclude(
+        {
+          path: '/api/v1/auth/send-otp',
+          method: RequestMethod.POST,
+        },
+        {
+          path: '/api/v1/auth/verify-otp',
+          method: RequestMethod.POST,
+        },
         {
           path: '/api/v1/device',
           method: RequestMethod.POST,
