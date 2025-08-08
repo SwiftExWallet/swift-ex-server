@@ -96,7 +96,7 @@ export class AppModule {
         },
         {
           path: '/api/v1/device/update-fcm-token',
-          method: RequestMethod.POST,
+          method: RequestMethod.PATCH,
         },
         {
           path: '/api/v1/device/:uniqueId/unique-id',
@@ -113,6 +113,10 @@ export class AppModule {
         {
           path: '/api/v1/wallet/:stellarAddress/stellar',
           method: RequestMethod.GET,
+        },
+        {
+          path: '/api/v1/wallet/:stellarAddress/activate-wallet',
+          method: RequestMethod.PATCH,
         },
       )
       .forRoutes('*');
