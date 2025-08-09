@@ -39,7 +39,7 @@ import { AuthTokenMiddleware } from './common/middleware/auth-token.middleware';
       defaults: {
         from: '"SwiftEx" <' + process.env.GMAIL_EMAIL + '>',
       },
-      preview: false,
+      preview: true,
       template: {
         dir: path.join(__dirname, '/../', '/templates/'),
         adapter: new HandlebarsAdapter(), // or new PugAdapter() or new EjsAdapter()
@@ -87,14 +87,6 @@ export class AppModule {
       .apply(AuthTokenMiddleware)
       .exclude(
         {
-          path: '/api/v1/auth/send-otp',
-          method: RequestMethod.POST,
-        },
-        {
-          path: '/api/v1/auth/verify-otp',
-          method: RequestMethod.POST,
-        },
-        {
           path: '/api/v1/device',
           method: RequestMethod.POST,
         },
@@ -104,7 +96,7 @@ export class AppModule {
         },
         {
           path: '/api/v1/device/update-fcm-token',
-          method: RequestMethod.POST,
+          method: RequestMethod.PATCH,
         },
         {
           path: '/api/v1/device/:uniqueId/unique-id',
@@ -121,6 +113,10 @@ export class AppModule {
         {
           path: '/api/v1/wallet/:stellarAddress/stellar',
           method: RequestMethod.GET,
+        },
+        {
+          path: '/api/v1/wallet/:stellarAddress/activate-wallet',
+          method: RequestMethod.PATCH,
         },
       )
       .forRoutes('*');

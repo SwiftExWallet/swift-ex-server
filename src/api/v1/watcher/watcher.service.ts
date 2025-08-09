@@ -29,22 +29,32 @@ export class WatcherService implements OnModuleInit {
     fcmToken: string,
   ): Promise<any> {
     const encrypted = await this.encryptMessageToString(fcmToken);
-    let data = JSON.stringify({
+    let data = {
       webhook_url: process.env.NOTIFICATION_WEBHOOK,
       chainType: process.env.SOROBAN_HOOKS_API_TYPE,
       walletAddress: stellarAddress,
       additionalData: encrypted,
-    });
+    };
     const headers = new AxiosHeaders();
     headers.set('x-api-key', process.env.SOROBAN_HOOKS_API_KEY as string);
     headers.set('Content-Type', 'application/json');
 
-    return this.httpService.request({
+    const response = await this.httpService.request({
       body: data,
       method: AlchemyMethod.POST,
       url: process.env.SOROBON_WALLET_WATCH_URL as string,
       headers,
+    }).catch(error => {
+      if (error?.response?.data?.message === 'Integration already exists!') {
+        return {
+          data: { success: true, message: 'Integration already exists' },
+          status: 200
+        };
+      }
+      throw error;
     });
+    
+    return response;
   }
 
   async addWalletToMoralis(

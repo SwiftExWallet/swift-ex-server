@@ -139,7 +139,9 @@ export class WalletService {
       user,
       device.fcmToken,
     );
-    await this.walletRepo.updateStreamId(wallet?._id, streamId);
+
+    const parsedStreamId = typeof streamId === 'string' ? JSON.parse(streamId) : streamId;
+    await this.walletRepo.updateStreamId(wallet?._id, parsedStreamId.streamId);
     return xdr;
   }
 }
