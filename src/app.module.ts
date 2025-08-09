@@ -108,14 +108,6 @@ export class AppModule {
       .apply(AuthTokenMiddleware)
       .exclude(
         {
-          path: '/api/v1/auth/send-otp',
-          method: RequestMethod.POST,
-        },
-        {
-          path: '/api/v1/auth/verify-otp',
-          method: RequestMethod.POST,
-        },
-        {
           path: '/api/v1/device',
           method: RequestMethod.POST,
         },
@@ -125,7 +117,7 @@ export class AppModule {
         },
         {
           path: '/api/v1/device/update-fcm-token',
-          method: RequestMethod.POST,
+          method: RequestMethod.PATCH,
         },
         {
           path: '/api/v1/device/:uniqueId/unique-id',
@@ -142,6 +134,10 @@ export class AppModule {
         {
           path: '/api/v1/wallet/:stellarAddress/stellar',
           method: RequestMethod.GET,
+        },
+        {
+          path: '/api/v1/wallet/:stellarAddress/activate-wallet',
+          method: RequestMethod.PATCH,
         },
       )
       .forRoutes('*');
