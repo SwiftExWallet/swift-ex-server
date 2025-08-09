@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { MiddlewareConsumer, Module, RequestMethod } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { ConfigModule } from '@nestjs/config';
@@ -13,6 +13,12 @@ import { JwtModule } from '@nestjs/jwt';
 import { AuthModule } from './api/v1/auth/auth.module';
 import { MailModule } from './api/v1/mail/mail.module';
 import { AlchemyModule } from './api/v1/alchemy/alchemy.module';
+import { WalletModule } from './api/v1/wallet/wallet.module';
+import { StellarModule } from './api/v1/stellar/stellar.module';
+import { WatcherModule } from './api/v1/watcher/watcher.module';
+import { NotificationModule } from './api/v1/notification/notification.module';
+import { DeviceAuthTokenMiddleware } from './common/middleware/device-auth-token-middleware';
+import { AuthTokenMiddleware } from './common/middleware/auth-token.middleware';
 @Module({
   imports: [
     ConfigModule.forRoot(),
@@ -33,7 +39,7 @@ import { AlchemyModule } from './api/v1/alchemy/alchemy.module';
       defaults: {
         from: '"SwiftEx" <' + process.env.GMAIL_EMAIL + '>',
       },
-      preview: true,
+      preview: false,
       template: {
         dir: path.join(__dirname, '/../', '/templates/'),
         adapter: new HandlebarsAdapter(), // or new PugAdapter() or new EjsAdapter()
@@ -45,7 +51,7 @@ import { AlchemyModule } from './api/v1/alchemy/alchemy.module';
     JwtModule.register({
       global: true,
       secret: process.env.JWT_SECRET,
-      signOptions: { expiresIn: '1s' },
+      signOptions: { expiresIn: '7d' },
       verifyOptions: { ignoreExpiration: false },
     }),
     UsersModule,
@@ -53,8 +59,70 @@ import { AlchemyModule } from './api/v1/alchemy/alchemy.module';
     AuthModule,
     MailModule,
     AlchemyModule,
+    WalletModule,
+    StellarModule,
+    WatcherModule,
+    NotificationModule,
   ],
   controllers: [AppController],
   providers: [AppService],
 })
-export class AppModule {}
+export class AppModule {
+  configure(consumer: MiddlewareConsumer): any {
+    consumer
+      .apply(DeviceAuthTokenMiddleware)
+      .exclude(
+        {
+          path: '/api/v1/device',
+          method: RequestMethod.POST,
+        },
+        {
+          path: '/api/v1/device/:uniqueId/unique-id',
+          method: RequestMethod.GET,
+        },
+      )
+      .forRoutes('*');
+
+    consumer
+      .apply(AuthTokenMiddleware)
+      .exclude(
+        {
+          path: '/api/v1/auth/send-otp',
+          method: RequestMethod.POST,
+        },
+        {
+          path: '/api/v1/auth/verify-otp',
+          method: RequestMethod.POST,
+        },
+        {
+          path: '/api/v1/device',
+          method: RequestMethod.POST,
+        },
+        {
+          path: '/api/v1/device/update-fcm-token',
+          method: RequestMethod.POST,
+        },
+        {
+          path: '/api/v1/device/update-fcm-token',
+          method: RequestMethod.POST,
+        },
+        {
+          path: '/api/v1/device/:uniqueId/unique-id',
+          method: RequestMethod.GET,
+        },
+        {
+          path: '/api/v1/wallet',
+          method: RequestMethod.POST,
+        },
+        {
+          path: '/api/v1/wallet/:walletAddress/multiChain',
+          method: RequestMethod.GET,
+        },
+        {
+          path: '/api/v1/wallet/:stellarAddress/stellar',
+          method: RequestMethod.GET,
+        },
+      )
+      .forRoutes('*');
+  }
+}

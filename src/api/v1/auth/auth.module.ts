@@ -5,6 +5,7 @@ import { MailModule } from '../mail/mail.module';
 import { AuthOtpRepository } from './auth-otp.repository';
 import { MongooseModule } from '@nestjs/mongoose';
 import { AuthOtp, AuthOtpSchema } from './schema/auth-otp.schema';
+import { AuthController } from './auth.controller';
 
 @Module({
   imports: [
@@ -12,6 +13,7 @@ import { AuthOtp, AuthOtpSchema } from './schema/auth-otp.schema';
     UsersModule,
     MailModule,
   ],
+  controllers: [AuthController],
   providers: [AuthService, AuthOtpRepository],
 })
 export class AuthModule {}

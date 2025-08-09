@@ -7,12 +7,15 @@ export class UsersController {
   constructor(private readonly userService: UsersService) {}
 
   @Put('')
-  async sendOtp(
+  async updateUser(
     @Req() req: any,
     @Res() response,
     @Body() updateUserDto: UpdateUserDto,
   ) {
-    const user = await this.userService.updateUser(req.user, updateUserDto);
+    const user = await this.userService.updateUser(
+      req.currentUser,
+      updateUserDto,
+    );
     response.status(201).json({ user });
   }
 }

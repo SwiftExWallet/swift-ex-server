@@ -14,11 +14,11 @@ export class User {
   @Prop()
   email: string;
 
-  @Prop({ required: true, unique: true })
-  phoneNumber: string;
+  @Prop()
+  countryCode: string;
 
-  @Prop({ type: String, select: false })
-  password: string;
+  @Prop()
+  phoneNumber: string;
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);

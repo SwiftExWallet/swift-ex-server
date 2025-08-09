@@ -1,22 +1,33 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { Device } from './schema/device.schema';
 import { DeviceRepository } from './device.repository';
 import mongoose from 'mongoose';
 import { CreateDeviceDto } from './dto/create-device.dto';
 import { UpdateFcmTokenDto } from './dto/update-fcm-token.dto';
 import { User } from '../users/schema/user.schema';
+import { JwtService } from '@nestjs/jwt';
 
 @Injectable()
 export class DeviceService {
-  constructor(private readonly deviceRepo: DeviceRepository) {}
+  private readonly logger = new Logger(DeviceService.name);
 
-  async create(createDeviceDto: CreateDeviceDto): Promise<Device | null> {
+  constructor(
+    private readonly deviceRepo: DeviceRepository,
+    private readonly jwtService: JwtService,
+  ) {}
+
+  async create(createDeviceDto: CreateDeviceDto): Promise<string> {
     const { uniqueId, fcmToken } = createDeviceDto;
-    const device: Device | null = await this.deviceRepo.findOne({ uniqueId });
+    let device: Device | null = await this.deviceRepo.findOne({ uniqueId });
     if (device) {
-      return this.deviceRepo.updateFcmToken(device._id, fcmToken);
+      this.logger.log('==== updating fcm token ===');
+      await this.deviceRepo.updateFcmToken(device._id, fcmToken);
+    } else {
+      this.logger.log('==== device creating ===');
+      device = await this.deviceRepo.create(createDeviceDto);
     }
-    return this.deviceRepo.create(createDeviceDto);
+    this.logger.log('==== returning device token ===');
+    return this.jwtService.sign({ _id: device?._id });
   }
 
   async updateFcmToken(
@@ -32,15 +43,7 @@ export class DeviceService {
     return this.deviceRepo.updateFcmToken(device._id, fcmToken);
   }
 
-  async updateUser(
-    _id: mongoose.Schema.Types.ObjectId,
-    user: User,
-  ): Promise<Device | null> {
-    const device: Device | null = await this.deviceRepo.findOne({ _id });
-
-    if (!device) {
-      throw new NotFoundException('Device not found');
-    }
+  async updateUser(device: Device, user: User): Promise<Device | null> {
     return this.deviceRepo.updateUser(device._id, user._id);
   }
 

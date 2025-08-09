@@ -10,6 +10,8 @@ import { AuthOtp } from './schema/auth-otp.schema';
 
 @Injectable()
 export class AuthService {
+  private readonly logger = new Logger(AuthService.name);
+
   constructor(
     private readonly userService: UsersService,
     private readonly jwtService: JwtService,
@@ -27,6 +29,7 @@ export class AuthService {
     }
     const otp = this.generateOtp();
     await this.authOtpRepository.create(sendOtpDto, otp);
+
     this.mailService.sendMail(
       email,
       'One-Time Passcode Verification',
@@ -41,20 +44,20 @@ export class AuthService {
       email,
     });
     if (!authOtp) {
-      Logger.log('==== Otp not found ===');
+      this.logger.log('==== Otp not found ===');
       throw new BadRequestException('Invalid otp');
     }
     if (authOtp.otp !== otp) {
-      Logger.log('==== Otp did not match ===');
+      this.logger.log('==== Otp did not match ===');
       throw new BadRequestException('Invalid otp');
     }
     let user: User | null = await this.userService.findOne({ email });
     if (!user) {
+      this.logger.log('==== New user Created ===');
       user = await this.userService.createUser({ email });
     }
-    const token = this.jwtService.sign(
-      JSON.stringify({ _id: user?._id, email }),
-    );
+    await this.authOtpRepository.delete(authOtp._id);
+    const token = this.jwtService.sign({ _id: user?._id, email });
     return {
       token,
       user,

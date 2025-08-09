@@ -92,14 +92,14 @@ export class AlchemyService {
 
   async orderCreate(payload: any, email: string): Promise<AxiosResponse> {
     const timestamp = new Date().toISOString();
-    const sign: string = await this.urlSigner.signPayload(
+    const signKey: string = await this.urlSigner.signPayload(
       timestamp,
       payload,
       AlchemyMethod.POST,
       process.env.ORDER_CREATION_REQUEST_URL as string,
     );
 
-    await this.urlSigner.signPayload(
+    const sign: string = await this.urlSigner.signPayload(
       timestamp,
       { email },
       AlchemyMethod.POST,
@@ -118,6 +118,7 @@ export class AlchemyService {
     const authFinder = JSON.parse(authToken.data);
     let data = JSON.stringify(payload);
 
+    headers.set('sign', signKey);
     headers.set('access-token', authFinder.data.accessToken);
 
     return this.httpService.request({
