@@ -71,6 +71,13 @@ export class WalletService {
     return this.walletRepo.find({ multiChainAddress: walletAddress, deviceId });
   }
 
+  async findByMultiChainAddressWithoutDevice(
+    walletAddressDto: WalletAddressDto,
+  ): Promise<Wallet | null> {
+    const { walletAddress } = walletAddressDto;
+    return this.walletRepo.findOne({ multiChainAddress: walletAddress });
+  }
+
   async assignUser(
     stellarAddressDto: StellarAddressDto,
     user: User,
@@ -140,7 +147,8 @@ export class WalletService {
       device.fcmToken,
     );
 
-    const parsedStreamId = typeof streamId === 'string' ? JSON.parse(streamId) : streamId;
+    const parsedStreamId =
+      typeof streamId === 'string' ? JSON.parse(streamId) : streamId;
     await this.walletRepo.updateStreamId(wallet?._id, parsedStreamId.streamId);
     return xdr;
   }

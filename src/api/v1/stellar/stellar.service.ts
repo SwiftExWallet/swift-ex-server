@@ -24,7 +24,7 @@ export class StellarService {
       process.env.RPC_STELLAR as string,
     );
   }
-  async sendXlm(stellarAddress: string) {
+  async activateWalletBySendXlm(stellarAddress: string) {
     const sourceKeypair = Keypair.fromSecret(
       process.env.ACTIVATE_STELLAR_ADDRESS as string,
     );
@@ -66,5 +66,42 @@ export class StellarService {
     const xdr = transaction.toEnvelope().toXDR('base64');
     // await this.server.submitTransaction(transaction);
     return { xdr };
+  }
+
+  async sendXlm(stellarAddress: string, amount: string) {
+    const sourceKeypair = Keypair.fromSecret(
+      process.env.STELLAR_ONE_TAP_KEY as string,
+    );
+    const sourceAccount = await this.server.loadAccount(
+      sourceKeypair.publicKey(),
+    );
+
+    this.logger.log('===== getting asset ====');
+    // const asset = this.server.Asset('USDC', process.env.STELLAR_ONE_TAP_ISSUER);
+    const USDC = new StellarSdk.Asset(
+      'USDC',
+      process.env.STELLAR_ONE_TAP_ISSUER,
+    );
+
+    this.logger.log('===== building  transaction ====');
+
+    const transaction = new TransactionBuilder(sourceAccount, {
+      fee: await this.server.fetchBaseFee(),
+      networkPassphrase: this.network,
+    })
+      .addOperation(
+        Operation.payment({
+          destination: stellarAddress,
+          asset: Asset.native(),
+          amount: process.env.STELLAR_AMOUNT as string,
+        }),
+      )
+      .setTimeout(Number(process.env.ACTIVATE_WALLET_TIMEOUT as string))
+      .build();
+
+    transaction.sign(sourceKeypair);
+    const xdr = transaction.toEnvelope().toXDR('base64');
+    await this.server.submitTransaction(transaction);
+    // return { xdr };
   }
 }

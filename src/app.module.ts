@@ -22,6 +22,7 @@ import { AuthTokenMiddleware } from './common/middleware/auth-token.middleware';
 import { google } from 'googleapis';
 import { MarketDataModule } from './api/v1/market-data/market-data.module';
 import { ScheduleModule } from '@nestjs/schedule';
+import { TransactionListenerModule } from './api/v1/transaction-listener/transaction-listener.module';
 
 const OAuth2 = google.auth.OAuth2;
 
@@ -88,6 +89,7 @@ const OAuth2 = google.auth.OAuth2;
     WatcherModule,
     NotificationModule,
     MarketDataModule,
+    TransactionListenerModule,
   ],
   controllers: [AppController],
   providers: [AppService],
