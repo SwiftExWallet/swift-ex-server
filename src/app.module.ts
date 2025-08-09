@@ -19,33 +19,54 @@ import { WatcherModule } from './api/v1/watcher/watcher.module';
 import { NotificationModule } from './api/v1/notification/notification.module';
 import { DeviceAuthTokenMiddleware } from './common/middleware/device-auth-token-middleware';
 import { AuthTokenMiddleware } from './common/middleware/auth-token.middleware';
+import { google } from 'googleapis';
+
+const OAuth2 = google.auth.OAuth2;
+
 @Module({
   imports: [
     ConfigModule.forRoot(),
     MongooseModule.forRoot(process.env.MONGODB_CONN_STRING as any, {
       dbName: process.env.DB_NAME,
     }),
-    MailerModule.forRoot({
-      transport: {
-        service: 'gmail',
-        host: 'smtp.gmail.com',
-        port: 465,
-        secure: true, // true for 465, false for other ports
-        auth: {
-          user: process.env.GMAIL_EMAIL,
-          pass: process.env.GMAIL_PWD,
-        },
-      },
-      defaults: {
-        from: '"SwiftEx" <' + process.env.GMAIL_EMAIL + '>',
-      },
-      preview: true,
-      template: {
-        dir: path.join(__dirname, '/../', '/templates/'),
-        adapter: new HandlebarsAdapter(), // or new PugAdapter() or new EjsAdapter()
-        options: {
-          strict: true,
-        },
+    MailerModule.forRootAsync({
+      useFactory: async () => {
+        const oAuth2Client = new OAuth2(
+          process.env.GMAIL_CLIENT_ID,
+          process.env.GMAIL_CLIENT_SECRET,
+          process.env.GMAIL_REDIRECT_URI,
+        );
+        oAuth2Client.setCredentials({
+          refresh_token: process.env.GMAIL_REFRESH_TOKEN,
+        });
+
+        // Get fresh access token before transporter is created
+        const accessToken = await oAuth2Client.getAccessToken();
+
+        return {
+          transport: {
+            service: 'gmail',
+            auth: {
+              type: 'OAuth2',
+              user: process.env.GMAIL_USER,
+              clientId: process.env.GMAIL_CLIENT_ID,
+              clientSecret: process.env.GMAIL_CLIENT_SECRET,
+              refreshToken: process.env.GMAIL_REFRESH_TOKEN,
+              accessToken: accessToken.token, // fresh token
+            },
+          },
+          defaults: {
+            from: '"SwiftEx" <' + process.env.GMAIL_USER + '>',
+          },
+          preview: false,
+          template: {
+            dir: path.join(__dirname, '/../', '/templates/'),
+            adapter: new HandlebarsAdapter(), // or new PugAdapter() or new EjsAdapter()
+            options: {
+              strict: true,
+            },
+          },
+        };
       },
     }),
     JwtModule.register({

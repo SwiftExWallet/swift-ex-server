@@ -21,11 +21,12 @@ export class MailService {
   ): void {
     const message = {
       to: to,
-      from: '"Swift Ex" <' + process.env.GMAIL_EMAIL + '>',
+      from: '"Swift Ex" <' + process.env.GMAIL_USER + '>',
       subject: subject,
       cc,
     };
     if (template != '' && context != '') {
+      console.log('=== yes template===');
       Object.assign(message, {
         template,
         context: context,
