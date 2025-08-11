@@ -135,7 +135,8 @@ export class WalletService {
       throw new NotFoundException(`Wallet not found`);
     }
     this.logger.log('==== preparing transaction to send XLM to wallet==');
-    const xdr = await this.stellarService.sendXlm(stellarAddress);
+    const xdr =
+      await this.stellarService.activateWalletBySendingXlm(stellarAddress);
     await this.notificationService.sendNotification(device.fcmToken, {
       title: 'Activate',
       body: `Congratulations! ${process.env.STELLAR_AMOUNT} XLM has been successfully added to your wallet.`,

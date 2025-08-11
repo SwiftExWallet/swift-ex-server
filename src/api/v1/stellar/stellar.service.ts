@@ -24,7 +24,7 @@ export class StellarService {
       process.env.RPC_STELLAR as string,
     );
   }
-  async activateWalletBySendXlm(stellarAddress: string) {
+  async activateWalletBySendingXlm(stellarAddress: string) {
     const sourceKeypair = Keypair.fromSecret(
       process.env.ACTIVATE_STELLAR_ADDRESS as string,
     );
@@ -33,11 +33,7 @@ export class StellarService {
     );
 
     this.logger.log('===== getting asset ====');
-    // const asset = this.server.Asset('USDC', process.env.STELLAR_ONE_TAP_ISSUER);
-    const USDC = new StellarSdk.Asset(
-      'USDC',
-      process.env.STELLAR_ONE_TAP_ISSUER,
-    );
+    const USDC = new StellarSdk.Asset('USDC', process.env.STELLAR_USDC_ADDRESS);
 
     this.logger.log('===== building  transaction ====');
 
@@ -55,7 +51,7 @@ export class StellarService {
       .addOperation(
         Operation.changeTrust({
           asset: USDC,
-          limit: '1000',
+          limit: process.env.STELLAR_USDC_TRUST_LIMIT,
           source: stellarAddress,
         }),
       )
@@ -64,7 +60,6 @@ export class StellarService {
 
     transaction.sign(sourceKeypair);
     const xdr = transaction.toEnvelope().toXDR('base64');
-    // await this.server.submitTransaction(transaction);
     return { xdr };
   }
 
@@ -77,11 +72,7 @@ export class StellarService {
     );
 
     this.logger.log('===== getting asset ====');
-    // const asset = this.server.Asset('USDC', process.env.STELLAR_ONE_TAP_ISSUER);
-    const USDC = new StellarSdk.Asset(
-      'USDC',
-      process.env.STELLAR_ONE_TAP_ISSUER,
-    );
+    const USDC = new StellarSdk.Asset('USDC', process.env.STELLAR_USDC_ADDRESS);
 
     this.logger.log('===== building  transaction ====');
 
