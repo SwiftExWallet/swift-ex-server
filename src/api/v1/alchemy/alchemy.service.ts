@@ -5,6 +5,7 @@ import { HttpService } from './http.service';
 import { AxiosHeaders } from 'axios';
 import * as crypto from 'crypto';
 import { AxiosResponse } from '../../../common/interface/axiosResponse';
+import { CreateBuyOrderDto } from './dto/alchemy-create-order.dto';
 
 @Injectable()
 export class AlchemyService {
@@ -90,57 +91,48 @@ export class AlchemyService {
     }
   }
 
-  async orderCreate(payload: any, email: string): Promise<AxiosResponse|void> {
-   try {
-    const timestamp = Date.now().toString();
+  async orderCreate(
+    createBuyOrderDto: CreateBuyOrderDto,
+    email: string,
+  ): Promise<AxiosResponse | void> {
+    const orderTimestamp = Date.now().toString();
+    const payload = Object.assign(createBuyOrderDto, {
+      side: 'BUY',
+      merchantOrderNo: Math.floor(
+        1000000000 + Math.random() * 9000000000,
+      ).toString(),
+      depositType: 2,
+      redirectUrl: process.env.ALCHEMY_PAY_REDIRECT_URL,
+      callbackUrl: process.env.ALCHEMY_PAY_WEBHOOK_URL,
+    });
+
     const signKey: string = await this.urlSigner.signPayload(
-      timestamp,
+      orderTimestamp,
       payload,
       AlchemyMethod.POST,
       process.env.ORDER_CREATION_REQUEST_URL as string,
     );
-console.log("step-1 ",signKey)
-const timestamp1 = Date.now().toString();
+    const userTokenTimestamp = String(Date.now());
 
-    const sign: string = await this.urlSigner.signPayload(
-      timestamp1,
-      { email },
-      AlchemyMethod.POST,
-      process.env.USER_AUTH_TOKEN_REQUEST_URL as string,
+    const accessToken = await this.getAuthAccessToken(
+      userTokenTimestamp,
+      email,
     );
-    console.log("step-2 ",sign)
-    const headers: AxiosHeaders = this.buildAppHeaders(timestamp1, sign);
-    console.log("step-3 ",headers)
+    if (!accessToken.status) {
+      throw new BadRequestException('Error in access token creation');
+    }
+    const orderCreationAccessTokenData = JSON.parse(accessToken.data);
 
-    const authToken = await this.httpService.request({
-      body: { email },
-      method: AlchemyMethod.POST,
-      url: process.env.USER_AUTH_TOKEN_REQUEST_URL as string,
-      headers,
-    });
-    console.log("step-4 ",authToken)
+    const headers = this.buildAppHeaders(orderTimestamp, signKey);
 
-    const authFinder = JSON.parse(authToken.data);
-    let data = JSON.stringify(payload);
-    console.log("step-4 ",authFinder)
-    headers.set('access-token', authFinder.data.accessToken);
-    headers.set('sign', signKey);
-    headers.set('timestamp', timestamp);
+    headers.set('access-token', orderCreationAccessTokenData.data.accessToken);
 
-
-    console.log("step-5 ",headers)
-
-    const httpRes= await this.httpService.request({
-      body: data,
+    return this.httpService.request({
+      body: payload,
       method: AlchemyMethod.POST,
       url: process.env.ORDER_CREATION_REQUEST_URL as string,
       headers,
     });
-    console.log("step -6",httpRes )
-    return httpRes
-   } catch (error) {
-    console.log("err",error)
-   }
   }
 
   async sellOrderCreate(
@@ -238,5 +230,22 @@ const timestamp1 = Date.now().toString();
     headers.set('ach-access-sign', sign);
     headers.set('Content-Type', 'application/json');
     return headers;
+  }
+
+  private async getAuthAccessToken(timestamp: string, email: string) {
+    const sign: string = await this.urlSigner.signPayload(
+      timestamp,
+      { email },
+      AlchemyMethod.POST,
+      process.env.USER_AUTH_TOKEN_REQUEST_URL as string,
+    );
+    const headers: AxiosHeaders = this.buildAppHeaders(timestamp, sign);
+
+    return this.httpService.request({
+      body: { email },
+      method: AlchemyMethod.POST,
+      url: process.env.USER_AUTH_TOKEN_REQUEST_URL as string,
+      headers,
+    });
   }
 }

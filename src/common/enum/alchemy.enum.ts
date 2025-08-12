@@ -1,5 +1,5 @@
 export enum AlchemyMethod {
-  POST = 'post',
-  GET = 'get',
-  PUT = 'put',
+  POST = 'POST',
+  GET = 'GET',
+  PUT = 'PUT',
 }
