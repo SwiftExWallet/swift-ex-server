@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import * as admin from 'firebase-admin';
 import { NotificationDto } from '../dto/notification.dto';
-import * as firebaseAccount from './firebaseServiceAccount.json';
+import * as firebaseAccount from './proxy-server-99cc2-firebase-adminsdk-oheag-108807e62a.json';
 import { Device } from '../../device/schema/device.schema';
 @Injectable()
 export class FirebaseNotificationService {

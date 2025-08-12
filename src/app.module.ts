@@ -147,6 +147,18 @@ export class AppModule {
           path: '/api/v1/wallet/:stellarAddress/activate-wallet',
           method: RequestMethod.PATCH,
         },
+        {
+          path: 'api/v1/alchemy/fetch-quotes',
+          method: RequestMethod.POST,
+        },
+        {
+          path: 'api/v1/alchemy/create-buy-order',
+          method: RequestMethod.POST,
+        },
+        {
+          path: 'api/v1/alchemy/create-sell-order',
+          method: RequestMethod.POST,
+        },
       )
       .forRoutes('*');
   }

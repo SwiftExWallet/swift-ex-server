@@ -14,10 +14,10 @@ export class AlchemyService {
     private readonly httpService: HttpService,
   ) {}
 
-  async fetchQuotes(payload: JSON): Promise<AxiosResponse> {
+  async fetchQuotes(payload: Record<string, any>): Promise<AxiosResponse> {
     try {
       //   const timestamp = Date.now().toString(); // can we change it to iso string ?
-      const timestamp = new Date().toISOString();
+      const timestamp = Date.now().toString();
       const sign: string = await this.urlSigner.signPayload(
         timestamp,
         payload,
@@ -90,23 +90,27 @@ export class AlchemyService {
     }
   }
 
-  async orderCreate(payload: any, email: string): Promise<AxiosResponse> {
-    const timestamp = new Date().toISOString();
+  async orderCreate(payload: any, email: string): Promise<AxiosResponse|void> {
+   try {
+    const timestamp = Date.now().toString();
     const signKey: string = await this.urlSigner.signPayload(
       timestamp,
       payload,
       AlchemyMethod.POST,
       process.env.ORDER_CREATION_REQUEST_URL as string,
     );
+console.log("step-1 ",signKey)
+const timestamp1 = Date.now().toString();
 
     const sign: string = await this.urlSigner.signPayload(
-      timestamp,
+      timestamp1,
       { email },
       AlchemyMethod.POST,
       process.env.USER_AUTH_TOKEN_REQUEST_URL as string,
     );
-
-    const headers: AxiosHeaders = this.buildAppHeaders(timestamp, sign);
+    console.log("step-2 ",sign)
+    const headers: AxiosHeaders = this.buildAppHeaders(timestamp1, sign);
+    console.log("step-3 ",headers)
 
     const authToken = await this.httpService.request({
       body: { email },
@@ -114,19 +118,29 @@ export class AlchemyService {
       url: process.env.USER_AUTH_TOKEN_REQUEST_URL as string,
       headers,
     });
+    console.log("step-4 ",authToken)
 
     const authFinder = JSON.parse(authToken.data);
     let data = JSON.stringify(payload);
-
-    headers.set('sign', signKey);
+    console.log("step-4 ",authFinder)
     headers.set('access-token', authFinder.data.accessToken);
+    headers.set('sign', signKey);
+    headers.set('timestamp', timestamp);
 
-    return this.httpService.request({
+
+    console.log("step-5 ",headers)
+
+    const httpRes= await this.httpService.request({
       body: data,
       method: AlchemyMethod.POST,
       url: process.env.ORDER_CREATION_REQUEST_URL as string,
       headers,
     });
+    console.log("step -6",httpRes )
+    return httpRes
+   } catch (error) {
+    console.log("err",error)
+   }
   }
 
   async sellOrderCreate(
@@ -146,7 +160,7 @@ export class AlchemyService {
         network: payload?.network,
         cryptoAmount: payload?.amount,
         fiat: payload?.fiat,
-        country: 'US',
+        country: payload?.country,
         email,
         redirectUrl: process.env.ALCHEMY_PAY_SELL_REDIRECT,
         callbackUrl: process.env.ALCHEMY_PAY_SELL_WEBHOOK,
