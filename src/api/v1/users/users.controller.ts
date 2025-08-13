@@ -1,4 +1,4 @@
-import { Body, Controller, Put, Req, Res } from '@nestjs/common';
+import { Body, Controller, Get, Put, Req, Res } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { ChangePasswordDto } from './dto/change-password.dto';
@@ -28,5 +28,14 @@ export class UsersController {
   ) {
     await this.userService.changePassword(changePasswordDto, req.currentUser);
     return response.status(200).json({ success: true });
+  }
+
+  @Get('/profile')
+  async getUser(
+    @Req() req: any,
+    @Res() response,
+  ) {
+    const user = await this.userService.findOne(req.currentUser);
+    response.status(201).json({ user });
   }
 }

@@ -71,6 +71,13 @@ export class WalletService {
     return this.walletRepo.find({ multiChainAddress: walletAddress, deviceId });
   }
 
+  async findByMultiChainAddressWithoutDevice(
+    walletAddressDto: WalletAddressDto,
+  ): Promise<Wallet | null> {
+    const { walletAddress } = walletAddressDto;
+    return this.walletRepo.findOne({ multiChainAddress: walletAddress });
+  }
+
   async assignUser(
     stellarAddressDto: StellarAddressDto,
     user: User,
@@ -128,7 +135,8 @@ export class WalletService {
       throw new NotFoundException(`Wallet not found`);
     }
     this.logger.log('==== preparing transaction to send XLM to wallet==');
-    const xdr = await this.stellarService.sendXlm(stellarAddress);
+    const xdr =
+      await this.stellarService.activateWalletBySendingXlm(stellarAddress);
     await this.notificationService.sendNotification(device.fcmToken, {
       title: 'Activate',
       body: `Congratulations! ${process.env.STELLAR_AMOUNT} XLM has been successfully added to your wallet.`,
@@ -140,7 +148,8 @@ export class WalletService {
       device.fcmToken,
     );
 
-    const parsedStreamId = typeof streamId === 'string' ? JSON.parse(streamId) : streamId;
+    const parsedStreamId =
+      typeof streamId === 'string' ? JSON.parse(streamId) : streamId;
     await this.walletRepo.updateStreamId(wallet?._id, parsedStreamId.streamId);
     return xdr;
   }

@@ -20,6 +20,8 @@ import { NotificationModule } from './api/v1/notification/notification.module';
 import { DeviceAuthTokenMiddleware } from './common/middleware/device-auth-token-middleware';
 import { AuthTokenMiddleware } from './common/middleware/auth-token.middleware';
 import { google } from 'googleapis';
+import { MarketDataModule } from './api/v1/market-data/market-data.module';
+import { ScheduleModule } from '@nestjs/schedule';
 
 const OAuth2 = google.auth.OAuth2;
 
@@ -75,6 +77,7 @@ const OAuth2 = google.auth.OAuth2;
       signOptions: { expiresIn: '7d' },
       verifyOptions: { ignoreExpiration: false },
     }),
+    ScheduleModule.forRoot(),
     UsersModule,
     DeviceModule,
     AuthModule,
@@ -84,6 +87,7 @@ const OAuth2 = google.auth.OAuth2;
     StellarModule,
     WatcherModule,
     NotificationModule,
+    MarketDataModule,
   ],
   controllers: [AppController],
   providers: [AppService],
@@ -136,6 +140,10 @@ export class AppModule {
           method: RequestMethod.POST,
         },
         {
+          path: '/api/v1/market-data',
+          method: RequestMethod.GET,
+        },
+        {
           path: '/api/v1/device/update-fcm-token',
           method: RequestMethod.POST,
         },
@@ -162,6 +170,14 @@ export class AppModule {
         {
           path: '/api/v1/wallet/:stellarAddress/activate-wallet',
           method: RequestMethod.PATCH,
+        },
+        {
+          path: 'api/v1/auth/send-otp',
+          method: RequestMethod.POST,
+        },
+        {
+          path: 'api/v1/auth/verify-otp',
+          method: RequestMethod.POST,
         },
       )
       .forRoutes('*');

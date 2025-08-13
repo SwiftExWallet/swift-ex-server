@@ -5,6 +5,8 @@ import { HttpService } from './http.service';
 import { AxiosHeaders } from 'axios';
 import * as crypto from 'crypto';
 import { AxiosResponse } from '../../../common/interface/axiosResponse';
+import { CreateBuyOrderDto } from './dto/alchemy-create-order.dto';
+import { buildAlchemySellOrderPayload, SellOrderDto } from './dto/alchemy-sell-order.dto';
 
 @Injectable()
 export class AlchemyService {
@@ -14,10 +16,10 @@ export class AlchemyService {
     private readonly httpService: HttpService,
   ) {}
 
-  async fetchQuotes(payload: JSON): Promise<AxiosResponse> {
+  async fetchQuotes(payload: Record<string, any>): Promise<AxiosResponse> {
     try {
       //   const timestamp = Date.now().toString(); // can we change it to iso string ?
-      const timestamp = new Date().toISOString();
+      const timestamp = Date.now().toString();
       const sign: string = await this.urlSigner.signPayload(
         timestamp,
         payload,
@@ -90,92 +92,71 @@ export class AlchemyService {
     }
   }
 
-  async orderCreate(payload: any, email: string): Promise<AxiosResponse> {
-    const timestamp = new Date().toISOString();
+  async orderCreate(
+    createBuyOrderDto: CreateBuyOrderDto,
+    email: string,
+  ): Promise<AxiosResponse | void> {
+    const orderTimestamp = Date.now().toString();
+    const payload = Object.assign(createBuyOrderDto, {
+      side: 'BUY',
+      merchantOrderNo: Math.floor(
+        1000000000 + Math.random() * 9000000000,
+      ).toString(),
+      depositType: 2,
+      redirectUrl: process.env.ALCHEMY_PAY_REDIRECT_URL,
+      callbackUrl: process.env.ALCHEMY_PAY_WEBHOOK_URL,
+    });
+
     const signKey: string = await this.urlSigner.signPayload(
-      timestamp,
+      orderTimestamp,
       payload,
       AlchemyMethod.POST,
       process.env.ORDER_CREATION_REQUEST_URL as string,
     );
+    const userTokenTimestamp = String(Date.now());
 
-    const sign: string = await this.urlSigner.signPayload(
-      timestamp,
-      { email },
-      AlchemyMethod.POST,
-      process.env.USER_AUTH_TOKEN_REQUEST_URL as string,
+    const accessToken = await this.getAuthAccessToken(
+      userTokenTimestamp,
+      email,
     );
+    if (!accessToken.status) {
+      throw new BadRequestException('Error in access token creation');
+    }
+    const orderCreationAccessTokenData = JSON.parse(accessToken.data);
 
-    const headers: AxiosHeaders = this.buildAppHeaders(timestamp, sign);
+    const headers = this.buildAppHeaders(orderTimestamp, signKey);
 
-    const authToken = await this.httpService.request({
-      body: { email },
-      method: AlchemyMethod.POST,
-      url: process.env.USER_AUTH_TOKEN_REQUEST_URL as string,
-      headers,
-    });
-
-    const authFinder = JSON.parse(authToken.data);
-    let data = JSON.stringify(payload);
-
-    headers.set('sign', signKey);
-    headers.set('access-token', authFinder.data.accessToken);
+    headers.set('access-token', orderCreationAccessTokenData.data.accessToken);
 
     return this.httpService.request({
-      body: data,
+      body: payload,
       method: AlchemyMethod.POST,
       url: process.env.ORDER_CREATION_REQUEST_URL as string,
       headers,
     });
   }
 
-  async sellOrderCreate(
-    payload: any,
-    email: string,
-  ): Promise<{ status: boolean; url: string }> {
-    try {
-      const timestamp = new Date().toISOString();
+  async sellOrderCreate(payload: SellOrderDto, email: string): Promise<string> {
+      (payload as any).email = email;
+      const sellFianlPayload=buildAlchemySellOrderPayload(payload)
 
-      // Request parameters
-      const paramsToSign = {
-        appId: process.env.ALCHEMY_PAY_APPID,
-        timestamp: timestamp,
-        type: 'sell',
-        merchantOrderNo: Date.now(),
-        crypto: payload?.crypto,
-        network: payload?.network,
-        cryptoAmount: payload?.amount,
-        fiat: payload?.fiat,
-        country: 'US',
-        email,
-        redirectUrl: process.env.ALCHEMY_PAY_SELL_REDIRECT,
-        callbackUrl: process.env.ALCHEMY_PAY_SELL_WEBHOOK,
-        language: 'en-US',
-        showTable: 'sell',
-      };
-
-      const rawDataToSign = this.getStringToSign(paramsToSign);
+      const rawDataToSign = this.getStringToSign(sellFianlPayload);
       const requestPathWithParams =
         process.env.USER_SELL_ORDER_REQUEST_URL + '?' + rawDataToSign;
       const onRampSignature = this.generateSignature(
-        timestamp,
+        sellFianlPayload.timestamp,
         AlchemyMethod.GET,
         requestPathWithParams,
-        process.env.ALCHEMY_PAY_SECRET,
+        process.env.ALCHEMY_PAY_SECRET as string,
       );
+
       const finalUrl =
         process.env.USER_SELL_ORDER_URL +
         rawDataToSign +
         '&sign=' +
         onRampSignature;
-      return {
-        status: true,
-        url: finalUrl,
-      };
-    } catch (error) {
-      this.logger.error('sellOrderCreate Error', error);
-      throw new BadRequestException(`sellOrderCreate failed: ${error.message}`);
-    }
+
+      return finalUrl;
   }
 
   // Function to sort parameters and return a string to sign
@@ -224,5 +205,22 @@ export class AlchemyService {
     headers.set('ach-access-sign', sign);
     headers.set('Content-Type', 'application/json');
     return headers;
+  }
+
+  private async getAuthAccessToken(timestamp: string, email: string) {
+    const sign: string = await this.urlSigner.signPayload(
+      timestamp,
+      { email },
+      AlchemyMethod.POST,
+      process.env.USER_AUTH_TOKEN_REQUEST_URL as string,
+    );
+    const headers: AxiosHeaders = this.buildAppHeaders(timestamp, sign);
+
+    return this.httpService.request({
+      body: { email },
+      method: AlchemyMethod.POST,
+      url: process.env.USER_AUTH_TOKEN_REQUEST_URL as string,
+      headers,
+    });
   }
 }
