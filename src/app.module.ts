@@ -148,15 +148,11 @@ export class AppModule {
           method: RequestMethod.PATCH,
         },
         {
-          path: 'api/v1/alchemy/fetch-quotes',
+          path: 'api/v1/auth/send-otp',
           method: RequestMethod.POST,
         },
         {
-          path: 'api/v1/alchemy/create-buy-order',
-          method: RequestMethod.POST,
-        },
-        {
-          path: 'api/v1/alchemy/create-sell-order',
+          path: 'api/v1/auth/verify-otp',
           method: RequestMethod.POST,
         },
       )

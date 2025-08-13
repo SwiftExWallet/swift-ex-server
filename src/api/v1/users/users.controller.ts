@@ -1,4 +1,4 @@
-import { Body, Controller, Put, Req, Res } from '@nestjs/common';
+import { Body, Controller, Get, Put, Req, Res } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { UpdateUserDto } from './dto/update-user.dto';
 
@@ -16,6 +16,15 @@ export class UsersController {
       req.currentUser,
       updateUserDto,
     );
+    response.status(201).json({ user });
+  }
+
+  @Get('/profile')
+  async getUser(
+    @Req() req: any,
+    @Res() response,
+  ) {
+    const user = await this.userService.findOne(req.currentUser);
     response.status(201).json({ user });
   }
 }
