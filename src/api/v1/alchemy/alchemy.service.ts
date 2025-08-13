@@ -7,6 +7,7 @@ import * as crypto from 'crypto';
 import { AxiosResponse } from '../../../common/interface/axiosResponse';
 import { CreateBuyOrderDto } from './dto/alchemy-create-order.dto';
 import { buildAlchemySellOrderPayload, SellOrderDto } from './dto/alchemy-sell-order.dto';
+import { User } from '../users/schema/user.schema';
 
 @Injectable()
 export class AlchemyService {
@@ -94,8 +95,9 @@ export class AlchemyService {
 
   async orderCreate(
     createBuyOrderDto: CreateBuyOrderDto,
-    email: string,
+    user: User,
   ): Promise<AxiosResponse | void> {
+    const { email } = user;
     const orderTimestamp = Date.now().toString();
     const payload = Object.assign(createBuyOrderDto, {
       side: 'BUY',
@@ -136,8 +138,9 @@ export class AlchemyService {
     });
   }
 
-  async sellOrderCreate(payload: SellOrderDto, email: string): Promise<string> {
-      (payload as any).email = email;
+  async sellOrderCreate(payload: SellOrderDto, user: User): Promise<string> {
+    const { email } = user;
+
       const sellFianlPayload=buildAlchemySellOrderPayload(payload)
 
       const rawDataToSign = this.getStringToSign(sellFianlPayload);
