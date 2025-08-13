@@ -23,11 +23,18 @@ export class UserRepository {
   }
 
   async findOne(cond: Record<string, any>): Promise<User | null> {
-    return await this.userModel.findOne(cond);
+    return this.userModel.findOne(cond).select('-password');
   }
 
-  findOneWithPassword(cond: Record<string, any>): Promise<User | null> {
-    return this.userModel.findOne(cond).select('+password');
+  async findOneWithPassword(cond: Record<string, any>): Promise<User | null> {
+    return this.userModel.findOne(cond);
+  }
+
+  async setUserAttribute(
+    _id: mongoose.Schema.Types.ObjectId,
+    updatedObject: any,
+  ) {
+    return this.userModel.findOneAndUpdate({ _id }, { $set: updatedObject });
   }
 
   update(

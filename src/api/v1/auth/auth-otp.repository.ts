@@ -23,7 +23,7 @@ export class AuthOtpRepository {
   }
 
   async findOne(cond: Record<string, any>): Promise<AuthOtp | null> {
-    return await this.authOtpModel.findOne(cond);
+    return await this.authOtpModel.findOne(cond).sort({ createdAt: -1 });
   }
 
   delete(_id: mongoose.Schema.Types.ObjectId): Promise<AuthOtp | null> {

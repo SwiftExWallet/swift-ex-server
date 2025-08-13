@@ -20,4 +20,3 @@ export class AuthOtp {
 }
 
 export const AuthOtpSchema = SchemaFactory.createForClass(AuthOtp);
-AuthOtpSchema.index({ email: 1 }, { unique: true });
