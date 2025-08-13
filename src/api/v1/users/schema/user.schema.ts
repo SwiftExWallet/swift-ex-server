@@ -19,6 +19,12 @@ export class User {
 
   @Prop()
   phoneNumber: string;
+
+  @Prop()
+  password: string;
+
+  @Prop({ default: false })
+  isEmailVerified: boolean;
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);

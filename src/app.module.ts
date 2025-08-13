@@ -112,6 +112,30 @@ export class AppModule {
       .apply(AuthTokenMiddleware)
       .exclude(
         {
+          path: '/api/v1/auth/signup',
+          method: RequestMethod.POST,
+        },
+        {
+          path: '/api/v1/auth/login',
+          method: RequestMethod.POST,
+        },
+        {
+          path: '/api/v1/auth/forgot-password',
+          method: RequestMethod.POST,
+        },
+        {
+          path: '/api/v1/auth/reset-password',
+          method: RequestMethod.POST,
+        },
+        {
+          path: '/api/v1/auth/verify-user',
+          method: RequestMethod.POST,
+        },
+        {
+          path: '/api/v1/auth/resend-otp',
+          method: RequestMethod.POST,
+        },
+        {
           path: '/api/v1/device',
           method: RequestMethod.POST,
         },

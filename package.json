@@ -26,6 +26,7 @@
     "@nestjs/core": "^11.0.1",
     "@nestjs/jwt": "^11.0.0",
     "@nestjs/mongoose": "^11.0.3",
+    "@nestjs/passport": "^11.0.5",
     "@nestjs/platform-express": "^11.0.1",
     "@nestjs/schedule": "^6.0.0",
     "@stellar/stellar-sdk": "^13.3.0",
@@ -42,6 +43,8 @@
     "moongoose": "^0.0.5",
     "moralis": "^2.27.2",
     "nodemailer": "^7.0.5",
+    "passport": "^0.7.0",
+    "passport-local": "^1.0.0",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.1"
   },
