@@ -1,6 +1,7 @@
 import { Body, Controller, Put, Req, Res } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { ChangePasswordDto } from './dto/change-password.dto';
 
 @Controller('api/v1/users')
 export class UsersController {
@@ -16,6 +17,16 @@ export class UsersController {
       req.currentUser,
       updateUserDto,
     );
-    response.status(201).json({ user });
+    return response.status(201).json({ user });
+  }
+
+  @Put('')
+  async changePassword(
+    @Req() req: any,
+    @Res() response,
+    @Body() changePasswordDto: ChangePasswordDto,
+  ) {
+    await this.userService.changePassword(changePasswordDto, req.currentUser);
+    return response.status(200).json({ success: true });
   }
 }
