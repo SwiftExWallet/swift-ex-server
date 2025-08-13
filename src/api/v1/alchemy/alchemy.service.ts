@@ -6,6 +6,7 @@ import { AxiosHeaders } from 'axios';
 import * as crypto from 'crypto';
 import { AxiosResponse } from '../../../common/interface/axiosResponse';
 import { CreateBuyOrderDto } from './dto/alchemy-create-order.dto';
+import { buildAlchemySellOrderPayload, SellOrderDto } from './dto/alchemy-sell-order.dto';
 
 @Injectable()
 export class AlchemyService {
@@ -135,53 +136,27 @@ export class AlchemyService {
     });
   }
 
-  async sellOrderCreate(
-    payload: any,
-    email: string,
-  ): Promise<{ status: boolean; url: string }> {
-    try {
-      const timestamp = new Date().toISOString();
+  async sellOrderCreate(payload: SellOrderDto, email: string): Promise<string> {
+      (payload as any).email = email;
+      const sellFianlPayload=buildAlchemySellOrderPayload(payload)
 
-      // Request parameters
-      const paramsToSign = {
-        appId: process.env.ALCHEMY_PAY_APPID,
-        timestamp: timestamp,
-        type: 'sell',
-        merchantOrderNo: Date.now(),
-        crypto: payload?.crypto,
-        network: payload?.network,
-        cryptoAmount: payload?.amount,
-        fiat: payload?.fiat,
-        country: payload?.country,
-        email,
-        redirectUrl: process.env.ALCHEMY_PAY_SELL_REDIRECT,
-        callbackUrl: process.env.ALCHEMY_PAY_SELL_WEBHOOK,
-        language: 'en-US',
-        showTable: 'sell',
-      };
-
-      const rawDataToSign = this.getStringToSign(paramsToSign);
+      const rawDataToSign = this.getStringToSign(sellFianlPayload);
       const requestPathWithParams =
         process.env.USER_SELL_ORDER_REQUEST_URL + '?' + rawDataToSign;
       const onRampSignature = this.generateSignature(
-        timestamp,
+        sellFianlPayload.timestamp,
         AlchemyMethod.GET,
         requestPathWithParams,
-        process.env.ALCHEMY_PAY_SECRET,
+        process.env.ALCHEMY_PAY_SECRET as string,
       );
+
       const finalUrl =
         process.env.USER_SELL_ORDER_URL +
         rawDataToSign +
         '&sign=' +
         onRampSignature;
-      return {
-        status: true,
-        url: finalUrl,
-      };
-    } catch (error) {
-      this.logger.error('sellOrderCreate Error', error);
-      throw new BadRequestException(`sellOrderCreate failed: ${error.message}`);
-    }
+
+      return finalUrl;
   }
 
   // Function to sort parameters and return a string to sign
