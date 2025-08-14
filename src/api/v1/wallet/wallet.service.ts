@@ -142,7 +142,7 @@ export class WalletService {
       title: 'Activate',
       body: `Congratulations! ${process.env.STELLAR_AMOUNT} XLM has been successfully added to your wallet.`,
     });
-    await this.watcherService.addWalletWatcher(stellarAddress, device.fcmToken);
+    this.watcherService.addWalletWatcher(stellarAddress, device.fcmToken);
     const { newStream, streamId } =
       await this.watcherService.addWalletToMoralis(wallet, device.fcmToken);
     if (newStream) {

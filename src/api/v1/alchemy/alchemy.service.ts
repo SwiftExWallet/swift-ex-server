@@ -6,7 +6,10 @@ import { AxiosHeaders } from 'axios';
 import * as crypto from 'crypto';
 import { AxiosResponse } from '../../../common/interface/axiosResponse';
 import { CreateBuyOrderDto } from './dto/alchemy-create-order.dto';
-import { buildAlchemySellOrderPayload, SellOrderDto } from './dto/alchemy-sell-order.dto';
+import {
+  buildAlchemySellOrderPayload,
+  SellOrderDto,
+} from './dto/alchemy-sell-order.dto';
 import { User } from '../users/schema/user.schema';
 
 @Injectable()
@@ -26,7 +29,7 @@ export class AlchemyService {
         timestamp,
         payload,
         AlchemyMethod.POST,
-        process.env.QUOTE_REQUEST_URL as string,
+        process.env.ALCHEMY_PAY_QUOTE_REQUEST_URL as string,
       );
       this.logger.log('==== fetching alchemy quotes ===');
       const headers: AxiosHeaders = this.buildAppHeaders(timestamp, sign);
@@ -34,7 +37,7 @@ export class AlchemyService {
       return this.httpService.request({
         body: payload,
         method: AlchemyMethod.POST,
-        url: process.env.QUOTE_REQUEST_URL as string,
+        url: process.env.ALCHEMY_PAY_QUOTE_REQUEST_URL as string,
         headers,
       });
     } catch (error) {
@@ -50,14 +53,14 @@ export class AlchemyService {
         timestamp,
         payload,
         AlchemyMethod.POST,
-        process.env.REGISTER_USER_REQUEST_URL as string,
+        process.env.ALCHEMY_PAY_REGISTER_USER_REQUEST_URL as string,
       );
       const headers: AxiosHeaders = this.buildAchAccessHeaders(timestamp, sign);
 
       return this.httpService.request({
         body: payload,
         method: AlchemyMethod.POST,
-        url: process.env.REGISTER_USER_REQUEST_URL as string,
+        url: process.env.ALCHEMY_PAY_REGISTER_USER_REQUEST_URL as string,
         headers,
       });
     } catch (error) {
@@ -76,14 +79,14 @@ export class AlchemyService {
         timestamp,
         payload,
         AlchemyMethod.POST,
-        process.env.USER_KYC_STATUS_REQUEST_URL as string,
+        process.env.ALCHEMY_PAY_USER_KYC_STATUS_REQUEST_URL as string,
       );
       const headers: AxiosHeaders = this.buildAchAccessHeaders(timestamp, sign);
 
       return this.httpService.request({
         body: payload,
         method: AlchemyMethod.POST,
-        url: process.env.USER_KYC_STATUS_REQUEST_URL as string,
+        url: process.env.ALCHEMY_PAY_USER_KYC_STATUS_REQUEST_URL as string,
         headers,
       });
     } catch (error) {
@@ -115,7 +118,7 @@ export class AlchemyService {
       orderTimestamp,
       payload,
       AlchemyMethod.POST,
-      process.env.ORDER_CREATION_REQUEST_URL as string,
+      process.env.ALCHEMY_PAY_ORDER_CREATION_REQUEST_URL as string,
     );
     const userTokenTimestamp = String(Date.now());
 
@@ -136,7 +139,7 @@ export class AlchemyService {
     return this.httpService.request({
       body: payload,
       method: AlchemyMethod.POST,
-      url: process.env.ORDER_CREATION_REQUEST_URL as string,
+      url: process.env.ALCHEMY_PAY_ORDER_CREATION_REQUEST_URL as string,
       headers,
     });
   }
@@ -144,25 +147,25 @@ export class AlchemyService {
   async sellOrderCreate(payload: SellOrderDto, user: User): Promise<string> {
     const { email } = user;
     this.logger.log('==== creating alchemy sell order ===');
-      const sellFianlPayload=buildAlchemySellOrderPayload(payload)
+    const sellFianlPayload = buildAlchemySellOrderPayload(payload);
 
-      const rawDataToSign = this.getStringToSign(sellFianlPayload);
-      const requestPathWithParams =
-        process.env.USER_SELL_ORDER_REQUEST_URL + '?' + rawDataToSign;
-      const onRampSignature = this.generateSignature(
-        sellFianlPayload.timestamp,
-        AlchemyMethod.GET,
-        requestPathWithParams,
-        process.env.ALCHEMY_PAY_SECRET as string,
-      );
-      this.logger.log('==== alchemy sell order created ===');
-      const finalUrl =
-        process.env.USER_SELL_ORDER_URL +
-        rawDataToSign +
-        '&sign=' +
-        onRampSignature;
+    const rawDataToSign = this.getStringToSign(sellFianlPayload);
+    const requestPathWithParams =
+      process.env.ALCHEMY_PAY_USER_SELL_ORDER_REQUEST_URL + '?' + rawDataToSign;
+    const onRampSignature = this.generateSignature(
+      sellFianlPayload.timestamp,
+      AlchemyMethod.GET,
+      requestPathWithParams,
+      process.env.ALCHEMY_PAY_SECRET as string,
+    );
+    this.logger.log('==== alchemy sell order created ===');
+    const finalUrl =
+      process.env.ALCHEMY_PAY_USER_SELL_ORDER_URL +
+      rawDataToSign +
+      '&sign=' +
+      onRampSignature;
 
-      return finalUrl;
+    return finalUrl;
   }
 
   // Function to sort parameters and return a string to sign
@@ -179,7 +182,7 @@ export class AlchemyService {
       })
       .filter(Boolean)
       .join('&');
-      this.logger.log('==== alchemy sorted Keys creation end===');
+    this.logger.log('==== alchemy sorted Keys creation end===');
     return s2s;
   }
 
@@ -221,14 +224,14 @@ export class AlchemyService {
       timestamp,
       { email },
       AlchemyMethod.POST,
-      process.env.USER_AUTH_TOKEN_REQUEST_URL as string,
+      process.env.ALCHEMY_PAY_USER_AUTH_TOKEN_REQUEST_URL as string,
     );
     const headers: AxiosHeaders = this.buildAppHeaders(timestamp, sign);
     this.logger.log('==== getting alchemy auth access token end===');
     return this.httpService.request({
       body: { email },
       method: AlchemyMethod.POST,
-      url: process.env.USER_AUTH_TOKEN_REQUEST_URL as string,
+      url: process.env.ALCHEMY_PAY_USER_AUTH_TOKEN_REQUEST_URL as string,
       headers,
     });
   }
