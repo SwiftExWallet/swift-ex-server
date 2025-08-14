@@ -36,14 +36,16 @@ export class DeviceService {
   ): Promise<Device | null> {
     const { fcmToken } = updateFcmToken;
     const device: Device | null = await this.deviceRepo.findOne({ _id });
-
+    this.logger.log('==== updating user fcm start===');
     if (!device) {
       throw new NotFoundException('Device not found');
     }
+    this.logger.log('==== updating user fcm end===');
     return this.deviceRepo.updateFcmToken(device._id, fcmToken);
   }
 
   async updateUser(device: Device, user: User): Promise<Device | null> {
+    this.logger.log('==== updating user ===');
     return this.deviceRepo.updateUser(device._id, user._id);
   }
 

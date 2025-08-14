@@ -21,6 +21,7 @@ export class UsersService {
 
   async createUser(createUserDto: CreateUserDto): Promise<User | null> {
     const { password } = createUserDto;
+    this.logger.log('==== creating user ===');
     return this.userRepo.create(
       Object.assign(createUserDto, {
         password: bcrypt.hashSync(
@@ -75,6 +76,7 @@ export class UsersService {
       user.password != null &&
       bcrypt.compareSync(password, user.password)
     ) {
+      this.logger.log('==== validating user ===');
       return this.findOne({ email });
     }
     return null;
@@ -91,19 +93,21 @@ export class UsersService {
     if (!user) {
       throw new NotFoundException('User not found');
     }
+    this.logger.log('==== changing user password started ===');
     const isPasswordValid = await bcrypt.compareSync(
       oldPassword,
       user.password,
     );
-
     if (!isPasswordValid) {
       throw new UnauthorizedException('Invalid old Password');
     }
+    this.logger.log('==== changing user password end ===');
 
     await this.updatePassword(user._id, newPassword);
   }
 
   async updatePassword(_id: mongoose.Schema.Types.ObjectId, password: string) {
+    this.logger.log('==== updating user password ===');
     await this.setUserAttribute(_id, {
       password: bcrypt.hashSync(
         password,
