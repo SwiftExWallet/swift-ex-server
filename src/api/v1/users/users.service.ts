@@ -70,7 +70,6 @@ export class UsersService {
     const user: User | null = await this.userRepo.findOneWithPassword({
       email,
     });
-    console.log(user);
     if (
       user &&
       user.password != null &&

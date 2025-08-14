@@ -35,42 +35,13 @@ export class StellarService {
       process.env.STELLAR_USDC_ADDRESS as string,
     );
 
-    this.logger.log('===== Building payment + trustline transaction =====');
+    this.logger.log('===== Building payment + trust line transaction =====');
 
     const transaction = new Stellar.TransactionBuilder(sourceAccount, {
       fee: Stellar.BASE_FEE,
 
       networkPassphrase: Stellar.Networks.TESTNET,
     })
-
-      // .addOperation(
-
-      //   Stellar.Operation.payment({
-
-      //     destination: stellarAddress,
-
-      //     asset: Asset.native(),
-
-      //     amount: process.env.STELLAR_AMOUNT || '10',
-
-      //   }),
-
-      // )
-
-      // .addOperation(
-
-      //   Operation.changeTrust({
-
-      //     asset: USDC,
-
-      //     limit: '1000',
-
-      //     source: stellarAddress,
-
-      //   }),
-
-      // )
-
       .addOperation(
         Stellar.Operation.createAccount({
           destination: stellarAddress,
@@ -84,14 +55,15 @@ export class StellarService {
           source: stellarAddress,
         }),
       )
-
       .setTimeout(Number(process.env.ACTIVATE_WALLET_TIMEOUT) || 180)
-
       .build();
+
+    this.logger.log('=====  transaction =====', { transaction });
 
     transaction.sign(sourceKeypair);
 
     const xdr = transaction.toEnvelope().toXDR('base64');
+    this.logger.log('=====  xdr =====', { xdr });
 
     return { xdr };
   }
