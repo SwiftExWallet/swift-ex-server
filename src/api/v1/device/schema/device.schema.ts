@@ -32,4 +32,3 @@ export class Device {
 }
 
 export const DeviceSchema = SchemaFactory.createForClass(Device);
-DeviceSchema.index({ email: 1 }, { unique: true });

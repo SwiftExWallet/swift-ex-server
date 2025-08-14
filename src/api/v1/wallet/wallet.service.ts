@@ -111,6 +111,7 @@ export class WalletService {
     user: User,
   ) {
     const { stellarAddress } = stellarAddressDto;
+    console.log('=== stellarAddress', stellarAddress);
     let activatedWallet: ActivatedWallet | null =
       await this.activatedWalletRepo.findOne({
         stellarAddress,
@@ -135,22 +136,23 @@ export class WalletService {
       throw new NotFoundException(`Wallet not found`);
     }
     this.logger.log('==== preparing transaction to send XLM to wallet==');
-    const xdr =
-      await this.stellarService.sendXlm(stellarAddress);
+    const xdr = await this.stellarService.sendXlm(stellarAddress);
     await this.notificationService.sendNotification(device.fcmToken, {
       title: 'Activate',
       body: `Congratulations! ${process.env.STELLAR_AMOUNT} XLM has been successfully added to your wallet.`,
     });
     await this.watcherService.addWalletWatcher(stellarAddress, device.fcmToken);
-    const streamId: string = await this.watcherService.addWalletToMoralis(
-      wallet,
-      user,
-      device.fcmToken,
-    );
+    const { newStream, streamId } =
+      await this.watcherService.addWalletToMoralis(wallet, device.fcmToken);
+    if (newStream) {
+      const parsedStreamId =
+        typeof streamId === 'string' ? JSON.parse(streamId) : streamId;
+      await this.walletRepo.updateStreamId(
+        wallet?._id,
+        parsedStreamId.streamId,
+      );
+    }
 
-    const parsedStreamId =
-      typeof streamId === 'string' ? JSON.parse(streamId) : streamId;
-    await this.walletRepo.updateStreamId(wallet?._id, parsedStreamId.streamId);
     return xdr;
   }
 }
