@@ -87,7 +87,6 @@ export class WalletController {
     const wallet = await this.walletService.activateWallet(
       stellarAddressDto,
       req.device,
-      req.CurrentUser,
     );
     return response.status(200).json({ wallet });
   }
