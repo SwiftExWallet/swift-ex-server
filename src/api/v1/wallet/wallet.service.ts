@@ -89,7 +89,7 @@ export class WalletService {
       deviceId,
     });
     if (!wallet) {
-      this.logger.log('===Stellar wallet found===');
+      this.logger.log('===Stellar wallet not found===');
       throw new BadRequestException('Wallet not found');
     }
     // check whether address already exist with user
@@ -105,18 +105,15 @@ export class WalletService {
     return this.walletRepo.delete(wallet._id);
   }
 
-  async activateWallet(
-    stellarAddressDto: StellarAddressDto,
-    device: Device,
-    user: User,
-  ) {
+  async activateWallet(stellarAddressDto: StellarAddressDto, device: Device) {
     const { stellarAddress } = stellarAddressDto;
-    console.log('=== stellarAddress', stellarAddress);
+    this.logger.log('=== stellarAddress', stellarAddress);
     let activatedWallet: ActivatedWallet | null =
       await this.activatedWalletRepo.findOne({
         stellarAddress,
       });
     if (activatedWallet) {
+      this.logger.log('wallet is already activated', { stellarAddress });
       throw new BadRequestException(`${stellarAddress} is already activated`);
     }
 
@@ -124,6 +121,10 @@ export class WalletService {
       deviceId: device._id,
     });
     if (activatedWallet) {
+      this.logger.log('wallet is already activated on this device', {
+        id: device._id,
+      });
+
       throw new BadRequestException(
         `Another address is already activated on this device`,
       );
@@ -145,8 +146,12 @@ export class WalletService {
     const { newStream, streamId } =
       await this.watcherService.addWalletToMoralis(wallet, device.fcmToken);
     if (newStream) {
+      this.logger.log('new stream', { stellarAddress, newStream });
+
       const parsedStreamId =
         typeof streamId === 'string' ? JSON.parse(streamId) : streamId;
+      this.logger.log('stream', { streamId });
+
       await this.walletRepo.updateStreamId(
         wallet?._id,
         parsedStreamId.streamId,

@@ -37,25 +37,27 @@ export class WatcherService implements OnModuleInit {
     const headers = new AxiosHeaders();
     headers.set('x-api-key', process.env.SOROBAN_HOOKS_API_KEY as string);
     headers.set('Content-Type', 'application/json');
-
-    const response = await this.httpService
-      .request({
+    this.logger.log('==== data, header ===', { data, headers });
+    try {
+      const response = await this.httpService.request({
         body: data,
         method: AlchemyMethod.POST,
         url: process.env.SOROBON_WALLET_WATCH_URL as string,
         headers,
-      })
-      .catch((error) => {
-        if (error?.response?.data?.message === 'Integration already exists!') {
-          return {
-            data: { success: true, message: 'Integration already exists' },
-            status: 200,
-          };
-        }
-        throw error;
       });
+      this.logger.log('===== response ==', { response });
+      return response;
+    } catch (error) {
+      this.logger.error('===== error ==', { error });
 
-    return response;
+      if (error?.response?.data?.message === 'Integration already exists!') {
+        return {
+          data: { success: true, message: 'Integration already exists' },
+          status: 200,
+        };
+      }
+      throw error;
+    }
   }
 
   async addWalletToMoralis(wallet: Wallet, fcmToken: string): Promise<any> {
@@ -77,6 +79,8 @@ export class WatcherService implements OnModuleInit {
         ],
         allAddresses: false,
       });
+
+      this.logger.log('=== stream ===', { stream });
 
       await Moralis.Streams.addAddress({
         id: stream.toJSON().id,
@@ -100,10 +104,14 @@ export class WatcherService implements OnModuleInit {
         id: wallet.streamId,
         address: stream.raw.result[0].address,
       });
+      this.logger.log('=== address deleted from stream ===');
+
       await Moralis.Streams.addAddress({
         id: wallet.streamId,
         address: [wallet.multiChainAddress],
       });
+      this.logger.log('=== address added to stream ===');
+
       return {
         newStream: false,
       };
