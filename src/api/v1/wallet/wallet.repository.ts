@@ -15,6 +15,8 @@ export class WalletRepository {
     createWalletDto: CreateWalletDto,
     session?: mongoose.ClientSession,
   ): Promise<Wallet> {
+    console.log('createWalletDtoRepo', createWalletDto);
+
     const createdWallet = new this.walletModel(createWalletDto);
     if (session) {
       return createdWallet.save({ session });

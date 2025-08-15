@@ -22,10 +22,7 @@ export class WalletController {
     @Res() response,
     @Body() createWalletDto: CreateWalletDto,
   ) {
-    const wallet = await this.walletService.create(
-      createWalletDto,
-      req.device._id,
-    );
+    const wallet = await this.walletService.create(createWalletDto, req.device);
     response.status(201).json({ wallet });
   }
 

@@ -23,7 +23,7 @@ export class WatcherService implements OnModuleInit {
     });
   }
 
-  async addWalletWatcher(
+  async addWalletToSorobon(
     stellarAddress: string,
     fcmToken: string,
   ): Promise<any> {
@@ -81,8 +81,11 @@ export class WatcherService implements OnModuleInit {
     if (!wallet.streamId) {
       this.logger.log('=== streamId not available===');
 
+      console.log('====fcm token ===', fcmToken);
       // creating new stream
-      const encrypted = await this.encryptMessageToString(fcmToken);
+      const encrypted = await this.encryptMessageToString(
+        `${fcmToken}_break_${wallet.multiChainAddress.substring(2, 7)}`,
+      );
       this.logger.log('=== encrypted ===', { encrypted });
 
       this.logger.log('=== creating a stream ===');
@@ -96,7 +99,6 @@ export class WatcherService implements OnModuleInit {
         includeContractLogs: true,
         topic0: [process.env.ERC20_TRANSFER_TOPIC!],
         abi: ERC20TransferABI,
-
         allAddresses: false,
       });
 
@@ -107,8 +109,8 @@ export class WatcherService implements OnModuleInit {
         address: [wallet.multiChainAddress],
       });
       return {
-        newStream: true,
-        streamId: stream.toJSON().id,
+        newStream: false,
+        stream,
       };
     } else {
       this.logger.log(' === streamId available ==');
