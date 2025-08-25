@@ -1,70 +1,65 @@
 import { Injectable, Logger } from '@nestjs/common';
-
-import * as Stellar from 'stellar-sdk';
+import {
+  Networks,
+  Keypair,
+  TransactionBuilder,
+  Operation,
+  Asset,
+} from '@stellar/stellar-sdk';
+import * as StellarSdk from '@stellar/stellar-sdk';
 
 @Injectable()
 export class StellarService {
   private readonly logger = new Logger(StellarService.name);
 
   private server;
-
+  private network: Networks;
   constructor() {
-    if (process.env.ENVIRONMENT === 'dev') {
-      Stellar.Network.useTestNetwork(); // v0.14.0 style
+    if (process.env.ENVIRONMENT == 'dev') {
+      this.network = Networks.TESTNET;
     } else {
-      Stellar.Network.usePublicNetwork(); // v0.14.0 style
+      this.network = Networks.PUBLIC;
     }
-
-    this.server = new Stellar.Server(process.env.RPC_STELLAR as string);
+    this.server = new StellarSdk.Horizon.Server(
+      process.env.RPC_STELLAR as string,
+    );
   }
-
-  async sendXlm(stellarAddress: string) {
-    const sourceKeypair = Stellar.Keypair.fromSecret(
+  async activateWalletBySendingXlm(stellarAddress: string) {
+    const sourceKeypair = Keypair.fromSecret(
       process.env.ACTIVATE_STELLAR_ADDRESS as string,
     );
-
-    this.logger.log('==== sourceKeypair Prepared ==');
     const sourceAccount = await this.server.loadAccount(
       sourceKeypair.publicKey(),
     );
 
-    this.logger.log('==== source account  loaded ==');
+    this.logger.log('===== getting asset ====');
+    const USDC = new StellarSdk.Asset('USDC', process.env.STELLAR_USDC_ADDRESS as string);
 
-    const USDC = new Stellar.Asset(
-      'USDC',
-      process.env.STELLAR_USDC_ADDRESS as string,
-    );
+    this.logger.log('===== building  transaction ====');
 
-    this.logger.log('===== Building payment + trust line transaction =====');
-
-    const transaction = new Stellar.TransactionBuilder(sourceAccount, {
-      fee: Stellar.BASE_FEE,
-
-      networkPassphrase: Stellar.Networks.TESTNET,
+    const transaction = new TransactionBuilder(sourceAccount, {
+      fee: await this.server.fetchBaseFee(),
+      networkPassphrase: this.network,
     })
       .addOperation(
-        Stellar.Operation.createAccount({
+        Operation.payment({
           destination: stellarAddress,
-          startingBalance: '5',
+          asset: Asset.native(),
+          amount: process.env.STELLAR_AMOUNT as string,
         }),
       )
       .addOperation(
-        Stellar.Operation.changeTrust({
+        Operation.changeTrust({
           asset: USDC,
-          limit: '1000',
+          limit: process.env.STELLAR_USDC_TRUST_LIMIT as string,
           source: stellarAddress,
         }),
       )
-      .setTimeout(Number(process.env.ACTIVATE_WALLET_TIMEOUT) || 180)
+      .setTimeout(Number(process.env.ACTIVATE_WALLET_TIMEOUT as string))
       .build();
 
-    this.logger.log('=====  transaction =====', { transaction });
-
     transaction.sign(sourceKeypair);
-
     const xdr = transaction.toEnvelope().toXDR('base64');
-    this.logger.log('=====  xdr =====', { xdr });
-
     return { xdr };
   }
 }
