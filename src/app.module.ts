@@ -179,6 +179,10 @@ export class AppModule {
           path: 'api/v1/auth/verify-otp',
           method: RequestMethod.POST,
         },
+        {
+          path: 'api/v1/alchemy/fetch-quotes',
+          method: RequestMethod.POST,
+        },
       )
       .forRoutes('*');
   }

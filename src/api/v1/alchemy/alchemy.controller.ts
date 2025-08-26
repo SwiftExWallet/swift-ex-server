@@ -23,7 +23,7 @@ export class AlchemyController {
   ) {
     const quotesRes = await this.alchemyService.orderCreate(
       createBuyOrderDto,
-      req.email,
+      req.currentUser,
     );
     response.send({ success: quotesRes });
   }
@@ -36,7 +36,7 @@ export class AlchemyController {
   ) {
     const quotesRes = await this.alchemyService.sellOrderCreate(
       sellOrderDto,
-      req.email,
+      req.currentUser,
     );
     response.send({ success: quotesRes });
   }

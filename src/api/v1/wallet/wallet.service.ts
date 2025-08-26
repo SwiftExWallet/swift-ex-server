@@ -34,8 +34,8 @@ export class WalletService {
 
   async create(
     createWalletDto: CreateWalletDto,
-    deviceId: mongoose.Schema.Types.ObjectId,
-  ): Promise<Wallet> {
+    device: Device,
+  ): Promise<Wallet | null> {
     const { userId } = createWalletDto;
     if (userId) {
       const user: User | null = await this.userService.findOne({ _id: userId });
@@ -44,7 +44,12 @@ export class WalletService {
       }
       createWalletDto = Object.assign(createWalletDto, { userId });
     }
-    return this.walletRepo.create(Object.assign(createWalletDto, { deviceId }));
+
+    const wallet = await this.walletRepo.create(
+      Object.assign(createWalletDto, { deviceId: device._id }),
+    );
+    await this.updateThirdPartyWebhookServices(wallet, device);
+    return this.walletRepo.findOne({ _id: wallet._id });
   }
 
   async findWalletByUserId(
@@ -89,7 +94,7 @@ export class WalletService {
       deviceId,
     });
     if (!wallet) {
-      this.logger.log('===Stellar wallet found===');
+      this.logger.log('===Stellar wallet not found===');
       throw new BadRequestException('Wallet not found');
     }
     // check whether address already exist with user
@@ -105,17 +110,15 @@ export class WalletService {
     return this.walletRepo.delete(wallet._id);
   }
 
-  async activateWallet(
-    stellarAddressDto: StellarAddressDto,
-    device: Device,
-    user: User,
-  ) {
+  async activateWallet(stellarAddressDto: StellarAddressDto, device: Device) {
     const { stellarAddress } = stellarAddressDto;
+    this.logger.log('=== stellarAddress', stellarAddress);
     let activatedWallet: ActivatedWallet | null =
       await this.activatedWalletRepo.findOne({
         stellarAddress,
       });
     if (activatedWallet) {
+      this.logger.log('wallet is already activated', { stellarAddress });
       throw new BadRequestException(`${stellarAddress} is already activated`);
     }
 
@@ -123,6 +126,10 @@ export class WalletService {
       deviceId: device._id,
     });
     if (activatedWallet) {
+      this.logger.log('wallet is already activated on this device', {
+        id: device._id,
+      });
+
       throw new BadRequestException(
         `Another address is already activated on this device`,
       );
@@ -135,22 +142,44 @@ export class WalletService {
       throw new NotFoundException(`Wallet not found`);
     }
     this.logger.log('==== preparing transaction to send XLM to wallet==');
-    const xdr =
-      await this.stellarService.activateWalletBySendingXlm(stellarAddress);
+    const xdr = await this.stellarService.activateWalletBySendingXlm(stellarAddress);
+
     await this.notificationService.sendNotification(device.fcmToken, {
       title: 'Activate',
       body: `Congratulations! ${process.env.STELLAR_AMOUNT} XLM has been successfully added to your wallet.`,
     });
-    await this.watcherService.addWalletWatcher(stellarAddress, device.fcmToken);
-    const streamId: string = await this.watcherService.addWalletToMoralis(
-      wallet,
-      user,
+
+    return xdr;
+  }
+
+  private async updateThirdPartyWebhookServices(
+    wallet: Wallet,
+    device: Device,
+  ) {
+    this.logger.log('==== updating sorbon hooks ===', {
+      stellarAddress: wallet.stellarAddress,
+    });
+    // updating sorobon hooks (stellar)
+    this.watcherService.addWalletToSorobon(
+      wallet.stellarAddress,
       device.fcmToken,
     );
 
-    const parsedStreamId =
-      typeof streamId === 'string' ? JSON.parse(streamId) : streamId;
-    await this.walletRepo.updateStreamId(wallet?._id, parsedStreamId.streamId);
-    return xdr;
+    // updating moralis (multichain)
+    this.logger.log('==== updating moralis ===', {
+      multiChainAddress: wallet.multiChainAddress,
+    });
+    const { newStream, stream } = await this.watcherService.addWalletToMoralis(
+      wallet,
+      device.fcmToken,
+    );
+    if (newStream) {
+      this.logger.log('new stream', { newStream, stream });
+
+      const parsedStreamId = typeof stream === 'string' ? stream : stream.id;
+      this.logger.log('stream', { stream });
+
+      return this.walletRepo.updateStreamId(wallet?._id, parsedStreamId);
+    }
   }
 }

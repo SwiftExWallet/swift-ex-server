@@ -9,7 +9,6 @@ import * as crypto from 'crypto';
 import Moralis from 'moralis';
 import { AlchemyMethod } from '../../../common/enum/alchemy.enum';
 import { HttpService } from '../alchemy/http.service';
-import { User } from '../users/schema/user.schema';
 import { Wallet } from '../wallet/schema/wallet.schema';
 
 @Injectable()
@@ -24,66 +23,97 @@ export class WatcherService implements OnModuleInit {
     });
   }
 
-  async addWalletWatcher(
+  async addWalletToSorobon(
     stellarAddress: string,
     fcmToken: string,
   ): Promise<any> {
-    const encrypted = await this.encryptMessageToString(fcmToken);
-    let data = {
-      webhook_url: process.env.NOTIFICATION_WEBHOOK,
-      chainType: process.env.SOROBAN_HOOKS_API_TYPE,
-      walletAddress: stellarAddress,
-      additionalData: encrypted,
-    };
-    const headers = new AxiosHeaders();
-    headers.set('x-api-key', process.env.SOROBAN_HOOKS_API_KEY as string);
-    headers.set('Content-Type', 'application/json');
-
-    const response = await this.httpService.request({
-      body: data,
-      method: AlchemyMethod.POST,
-      url: process.env.SOROBON_WALLET_WATCH_URL as string,
-      headers,
-    }).catch(error => {
-      if (error?.response?.data?.message === 'Integration already exists!') {
-        return {
-          data: { success: true, message: 'Integration already exists' },
-          status: 200
-        };
-      }
-      throw error;
-    });
-    
-    return response;
+    try {
+      const encrypted = await this.encryptMessageToString(fcmToken);
+      let data = {
+        webhook_url: process.env.SOROBON_NOTIFICATION_WEBHOOK,
+        chainType: process.env.SOROBAN_HOOKS_API_TYPE,
+        walletAddress: stellarAddress,
+        additionalData: encrypted,
+      };
+      const headers = new AxiosHeaders();
+      headers.set('x-api-key', process.env.SOROBAN_HOOKS_API_KEY as string);
+      headers.set('Content-Type', 'application/json');
+      this.logger.log('==== data, header ===', { data, headers });
+      const response = await this.httpService.request({
+        body: data,
+        method: AlchemyMethod.POST,
+        url: process.env.SOROBON_WALLET_WATCH_URL as string,
+        headers,
+      });
+      this.logger.log('===== response ==', { response });
+      return response;
+    } catch (error: any) {
+      this.logger.error('====== error ===', { error: error.message });
+    }
   }
 
-  async addWalletToMoralis(
-    wallet: Wallet,
-    user: User,
-    fcmToken: string,
-  ): Promise<any> {
+  async addWalletToMoralis(wallet: Wallet, fcmToken: string): Promise<any> {
+    const ERC20TransferABI = [
+      {
+        anonymous: false,
+        inputs: [
+          {
+            indexed: true,
+            name: 'from',
+            type: 'address',
+          },
+          {
+            indexed: true,
+            name: 'to',
+            type: 'address',
+          },
+          {
+            indexed: false,
+            name: 'value',
+            type: 'uint256',
+          },
+        ],
+        name: 'Transfer',
+        type: 'event',
+      },
+    ];
+
     if (!wallet.streamId) {
-      this.logger.log('called when streamId not available');
+      this.logger.log('=== streamId not available===');
+
+      console.log('====fcm token ===', fcmToken);
       // creating new stream
-      const encrypted = await this.encryptMessageToString(fcmToken);
+      const encrypted = await this.encryptMessageToString(
+        `${fcmToken}_break_${wallet.multiChainAddress.substring(2, 7)}`,
+      );
+      this.logger.log('=== encrypted ===', { encrypted });
+
+      this.logger.log('=== creating a stream ===');
+
       const stream = await Moralis.Streams.add({
-        webhookUrl: process.env.NOTIFICATION_WEBHOOK as string,
+        webhookUrl: process.env.MORALIS_NOTIFICATION_WEBHOOK as string,
         description: 'user wallet',
         tag: encrypted,
-        chains: ['0xaa36a7', '0x61'],
+        chains: ['0xaa36a7', '0x61'], // Sepolia & BSC testnet
         includeNativeTxs: true,
+        includeContractLogs: true,
+        topic0: [process.env.ERC20_TRANSFER_TOPIC!],
+        abi: ERC20TransferABI,
+        allAddresses: false,
       });
+
+      this.logger.log('=== stream ===', { stream });
 
       await Moralis.Streams.addAddress({
         id: stream.toJSON().id,
         address: [wallet.multiChainAddress],
       });
       return {
-        newStream: true,
-        streamId: stream.toJSON().id,
+        newStream: false,
+        stream,
       };
     } else {
-      this.logger.log('called when streamId avilable ---0');
+      this.logger.log(' === streamId available ==');
       const stream = await Moralis.Streams.getAddresses({
         limit: 10,
         id: wallet.streamId,
@@ -96,10 +126,14 @@ export class WatcherService implements OnModuleInit {
         id: wallet.streamId,
         address: stream.raw.result[0].address,
       });
+      this.logger.log('=== address deleted from stream ===');
+
       await Moralis.Streams.addAddress({
         id: wallet.streamId,
         address: [wallet.multiChainAddress],
       });
+      this.logger.log('=== address added to stream ===');
+
       return {
         newStream: false,
       };
