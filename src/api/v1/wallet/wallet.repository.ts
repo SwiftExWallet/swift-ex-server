@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import mongoose, { Model } from 'mongoose';
 import { Wallet } from './schema/wallet.schema';
@@ -6,6 +6,7 @@ import { CreateWalletDto } from './dto/create-wallet.dto';
 
 @Injectable()
 export class WalletRepository {
+  private readonly logger = new Logger(WalletRepository.name);
   constructor(
     @InjectModel(Wallet.name)
     private walletModel: Model<Wallet>,
@@ -15,7 +16,7 @@ export class WalletRepository {
     createWalletDto: CreateWalletDto,
     session?: mongoose.ClientSession,
   ): Promise<Wallet> {
-    console.log('createWalletDtoRepo', createWalletDto);
+    this.logger.log('createWalletDtoRepo', createWalletDto);
 
     const createdWallet = new this.walletModel(createWalletDto);
     if (session) {

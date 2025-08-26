@@ -147,13 +147,13 @@ export class AlchemyService {
   async sellOrderCreate(payload: SellOrderDto, user: User): Promise<string> {
     const { email } = user;
     this.logger.log('==== creating alchemy sell order ===');
-    const sellFianlPayload = buildAlchemySellOrderPayload(payload);
+    const sellPayload = buildAlchemySellOrderPayload(payload);
 
-    const rawDataToSign = this.getStringToSign(sellFianlPayload);
+    const rawDataToSign = this.getStringToSign(sellPayload);
     const requestPathWithParams =
       process.env.ALCHEMY_PAY_USER_SELL_ORDER_REQUEST_URL + '?' + rawDataToSign;
     const onRampSignature = this.generateSignature(
-      sellFianlPayload.timestamp,
+      sellPayload.timestamp,
       AlchemyMethod.GET,
       requestPathWithParams,
       process.env.ALCHEMY_PAY_SECRET as string,
@@ -169,33 +169,33 @@ export class AlchemyService {
   }
 
   // Function to sort parameters and return a string to sign
-  private getStringToSign(params) {
-    const sortedKeys = Object.keys(params).sort();
+  private getStringToSign(params: Record<string, any>): string {
+    const sortedKeys: string[] = Object.keys(params).sort();
     this.logger.log('==== alchemy sorted Keys creation started===');
-    const s2s = sortedKeys
-      .map((key) => {
+    const s2s: string = sortedKeys
+      .map((key: string) => {
         const value = params[key];
         if (Array.isArray(value) || value === '') {
           return null;
         }
         return `${key}=${value}`;
       })
-      .filter(Boolean)
+      .filter((item): item is string => Boolean(item))
       .join('&');
     this.logger.log('==== alchemy sorted Keys creation end===');
     return s2s;
   }
 
   // Function to generate HMAC SHA256 signature
-  private generateSignature(timestamp, httpMethod, requestPath, secretKey) {
+  private generateSignature(timestamp: string, httpMethod: string, requestPath: string, secretKey: string): string {
     // Concatenate parameters for signature string
     this.logger.log('==== alchemy signature creation started===');
-    const signatureString = timestamp + httpMethod + requestPath;
+    const signatureString: string = timestamp + httpMethod + requestPath;
 
     // Generate HMAC SHA256 signature using the secret key
     const hmac = crypto.createHmac('sha256', secretKey);
     hmac.update(signatureString);
-    const signature = hmac.digest('base64');
+    const signature: string = hmac.digest('base64');
     this.logger.log('==== alchemy signature creation end===');
     return encodeURIComponent(signature);
   }

@@ -44,7 +44,6 @@ export class WalletService {
       }
       createWalletDto = Object.assign(createWalletDto, { userId });
     }
-    console.log('createWalletDto1', createWalletDto);
 
     const wallet = await this.walletRepo.create(
       Object.assign(createWalletDto, { deviceId: device._id }),
