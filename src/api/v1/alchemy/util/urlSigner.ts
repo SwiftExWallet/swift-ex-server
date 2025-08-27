@@ -15,7 +15,7 @@ export class UrlSigner {
     timestamp: string,
     method: string,
     requestUrl: string,
-    body: string,
+    body: any,
     secretKey: string,
   ): string {
     const content =
@@ -43,31 +43,39 @@ export class UrlSigner {
     return `${path}?${queryString}`;
   }
 
-  private getJsonBody(body: string): string {
+  private getJsonBody(body: any): string {
     let map: Record<string, any>;
 
-    try {
-      map = JSON.parse(body);
-    } catch {
+    if (typeof body === 'string') {
+      try {
+        map = JSON.parse(body);
+      } catch {
+        map = {};
+      }
+    } else if (typeof body === 'object') {
+      map = body || {};
+    } else {
       map = {};
     }
 
-    if (Object.keys(map).length === 0) return '';
+    if (Object.keys(map).length === 0) {
+      return '';
+    }
 
     map = this.removeEmptyKeys(map);
-    map = this.sortObject(map);
+    map = this.sortObject(map) as Record<string, any>;
 
     return JSON.stringify(map);
   }
 
-  private removeEmptyKeys(obj: Record<string, any>): Record<string, any> {
-    const result = {};
-    for (const [key, value] of Object.entries(obj)) {
+  private removeEmptyKeys(map: Record<string, any>): Record<string, any> {
+    const retMap: Record<string, any> = {};
+    for (const [key, value] of Object.entries(map)) {
       if (value !== null && value !== '') {
-        result[key] = value;
+        retMap[key] = value;
       }
     }
-    return result;
+    return retMap;
   }
 
   private sortObject(obj: any): any {
@@ -80,29 +88,59 @@ export class UrlSigner {
   }
 
   private sortMap(map: Record<string, any>): Record<string, any> {
-    const sortedEntries = Object.entries(this.removeEmptyKeys(map)).sort(
-      ([a], [b]) => a.localeCompare(b),
+    const sortedMap = new Map(
+      Object.entries(this.removeEmptyKeys(map)).sort(([aKey], [bKey]) =>
+        aKey.localeCompare(bKey),
+      ),
     );
-    const result: Record<string, any> = {};
-    for (const [key, value] of sortedEntries) {
-      result[key] = typeof value === 'object' ? this.sortObject(value) : value;
+
+    for (const [key, value] of sortedMap.entries()) {
+      if (typeof value === 'object') {
+        sortedMap.set(key, this.sortObject(value));
+      }
     }
-    return result;
+
+    return Object.fromEntries(sortedMap.entries());
   }
 
   private sortList(list: any[]): any[] {
-    const numbers = list
-      .filter((item) => typeof item === 'number' && !Number.isInteger(item))
-      .sort((a, b) => a - b);
-    const integers = list
-      .filter((item) => Number.isInteger(item))
-      .sort((a, b) => a - b);
-    const strings = list.filter((item) => typeof item === 'string').sort();
-    const objects = list
-      .filter((item) => typeof item === 'object')
-      .map((item) => this.sortObject(item));
+    const objectList: any[] = [];
+    const intList: number[] = [];
+    const floatList: number[] = [];
+    const stringList: string[] = [];
+    const jsonArray: object[] = [];
 
-    return [...integers, ...numbers, ...strings, ...objects];
+    for (const item of list) {
+      if (typeof item === 'object') {
+        jsonArray.push(item);
+      } else if (Number.isInteger(item)) {
+        intList.push(item);
+      } else if (typeof item === 'number') {
+        floatList.push(item);
+      } else if (typeof item === 'string') {
+        stringList.push(item);
+      } else {
+        intList.push(item);
+      }
+    }
+
+    intList.sort((a, b) => a - b);
+    floatList.sort((a, b) => a - b);
+    stringList.sort();
+
+    objectList.push(...intList, ...floatList, ...stringList, ...jsonArray);
+    list.length = 0;
+    list.push(...objectList);
+
+    const retList: any[] = [];
+    for (const item of list) {
+      if (typeof item === 'object') {
+        retList.push(this.sortObject(item));
+      } else {
+        retList.push(item);
+      }
+    }
+    return retList;
   }
 
   async signPayload(
@@ -116,7 +154,7 @@ export class UrlSigner {
         timestamp,
         method,
         requestUrl,
-        JSON.stringify(apiPayload),
+        apiPayload,
         process.env.ALCHEMY_PAY_SECRET as string,
       );
     } catch (error) {

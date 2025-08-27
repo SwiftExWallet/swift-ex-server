@@ -1,19 +1,11 @@
 import 'reflect-metadata';
 import { IsEmail, IsNotEmpty, IsOptional, IsString } from 'class-validator';
 
-export class CreateUserDto {
-  @IsString()
-  @IsOptional()
-  firstName?: string;
-
-  @IsString()
-  @IsOptional()
-  lastName?: string;
-
+export class SignupDto {
   @IsEmail()
   @IsNotEmpty()
   email: string;
 
   @IsOptional()
-  phone?: string;
+  password: string;
 }
