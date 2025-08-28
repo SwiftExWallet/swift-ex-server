@@ -1,37 +1,134 @@
+# SwiftEX Server
+
 <p align="center">
   <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
 </p>
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
-
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+<p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
 
 ## Description
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+SwiftEX Server is a NestJS-based backend service that provides APIs for cryptocurrency trading, wallet management, and market data services. Built with TypeScript and designed for scalability and performance.
 
-## Project setup
+## Features
+
+- 🔐 **Authentication & Authorization** - JWT-based auth with OTP verification
+- 💰 **Wallet Management** - Stellar blockchain wallet operations
+- 📊 **Market Data** - Real-time cryptocurrency market information
+- 🔔 **Notifications** - Firebase push notifications
+- 📧 **Email Services** - Gmail integration for notifications
+- 📱 **Device Management** - FCM token management for mobile apps
+- ⚡ **Alchemy Integration** - Blockchain transaction services
+- 🌟 **Stellar Network** - Stellar blockchain operations
+
+## Tech Stack
+
+- **Framework**: NestJS 11
+- **Language**: TypeScript
+- **Database**: MongoDB with Mongoose
+- **Authentication**: JWT, Passport
+- **Email**: Gmail OAuth2, Handlebars templates
+- **Notifications**: Firebase Admin SDK
+- **Blockchain**: Stellar SDK, Alchemy API
+- **Package Manager**: Yarn
+- **Runtime**: Node.js 18 (LTS)
+
+## Prerequisites
+
+- Node.js 18+
+- Yarn
+- MongoDB
+- Docker (optional)
+
+## Project Setup
+
+### Local Development
 
 ```bash
+# Install dependencies
 $ yarn install
+
+# Set up environment variables
+$ cp .env.example .env
+# Edit .env with your configuration
+
+# Start development server
+$ yarn run start:dev
 ```
 
-## Compile and run the project
+### Environment Variables
+
+Create a `.env` file with the following variables:
+
+```env
+# Application
+NODE_ENV=development
+PORT=3000
+
+# Database
+MONGODB_CONN_STRING=mongodb://localhost:27017
+DB_NAME=swift-ex-server
+
+# JWT
+JWT_SECRET=your-super-secret-jwt-key
+
+# Gmail (for notifications)
+GMAIL_CLIENT_ID=your-gmail-client-id
+GMAIL_CLIENT_SECRET=your-gmail-client-secret
+GMAIL_REFRESH_TOKEN=your-gmail-refresh-token
+GMAIL_USER=your-email@gmail.com
+GMAIL_REDIRECT_URI=https://developers.google.com/oauthplayground
+
+# External APIs
+ALCHEMY_API_KEY=your-alchemy-api-key
+STELLAR_NETWORK=testnet
+
+# Firebase (for push notifications)
+FIREBASE_PROJECT_ID=your-project-id
+FIREBASE_PRIVATE_KEY=your-private-key
+FIREBASE_CLIENT_EMAIL=your-client-email
+```
+
+## Docker Setup
+
+### Quick Start
+
+```bash
+# Build and run with Docker
+$ ./build.sh
+
+# Or manually
+$ docker build -t swift-ex-server .
+$ docker run -p 3000:3000 swift-ex-server
+```
+
+### Docker Compose (Optional)
+
+```bash
+# Start with MongoDB
+$ docker-compose up --build
+```
+
+## API Endpoints
+
+### Authentication
+- `POST /api/v1/auth/signup` - User registration
+- `POST /api/v1/auth/login` - User login
+- `POST /api/v1/auth/send-otp` - Send OTP
+- `POST /api/v1/auth/verify-otp` - Verify OTP
+
+### Users
+- `GET /api/v1/users/profile` - Get user profile
+- `PUT /api/v1/users/profile` - Update user profile
+
+### Wallets
+- `POST /api/v1/wallet` - Create wallet
+- `GET /api/v1/wallet/address` - Get wallet address
+
+### Market Data
+- `GET /api/v1/market-data` - Get market data
+
+## Development
 
 ```bash
 # development
@@ -42,9 +139,12 @@ $ yarn run start:dev
 
 # production mode
 $ yarn run start:prod
+
+# build
+$ yarn run build
 ```
 
-## Run tests
+## Testing
 
 ```bash
 # unit tests
@@ -59,40 +159,57 @@ $ yarn run test:cov
 
 ## Deployment
 
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
-
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
+### Docker Deployment
 
 ```bash
-$ yarn install -g @nestjs/mau
-$ mau deploy
+# Build and push to ECR
+$ ./build.sh
+
+# The script will:
+# 1. Build the Docker image
+# 2. Tag it for ECR
+# 3. Push to ECR
 ```
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
+### Environment Setup
 
-## Resources
+Ensure your production environment has all required environment variables configured, especially:
+- MongoDB connection string
+- JWT secret
+- Gmail OAuth2 credentials
+- API keys for external services
 
-Check out a few resources that may come in handy when working with NestJS:
+## Project Structure
 
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
+```
+src/
+├── api/v1/           # API modules
+│   ├── auth/         # Authentication
+│   ├── users/        # User management
+│   ├── wallet/       # Wallet operations
+│   ├── alchemy/      # Blockchain services
+│   ├── stellar/      # Stellar operations
+│   ├── mail/         # Email services
+│   └── notification/ # Push notifications
+├── common/           # Shared utilities
+└── main.ts          # Application entry point
+```
 
-## Support
+## Contributing
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
-
-## Stay in touch
-
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Add tests if applicable
+5. Submit a pull request
 
 ## License
 
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+This project is licensed under the MIT License.
+
+## Support
+
+For support and questions:
+- Create an issue in the repository
+- Contact the development team
+- Check the NestJS documentation for framework-specific questions
