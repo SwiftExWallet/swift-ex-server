@@ -94,7 +94,7 @@ export class WatcherService implements OnModuleInit {
         webhookUrl: process.env.MORALIS_NOTIFICATION_WEBHOOK as string,
         description: 'user wallet',
         tag: encrypted,
-        chains: ['0xaa36a7', '0x61'], // Sepolia & BSC testnet
+        chains: ['0xaa36a7', '0x61', '0x1', '0x38'],
         includeNativeTxs: true,
         includeContractLogs: true,
         topic0: [process.env.ERC20_TRANSFER_TOPIC!],
