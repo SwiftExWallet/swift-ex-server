@@ -109,7 +109,7 @@ export class WatcherService implements OnModuleInit {
         address: [wallet.multiChainAddress],
       });
       return {
-        newStream: false,
+        newStream: true,
         stream,
       };
     } else {
