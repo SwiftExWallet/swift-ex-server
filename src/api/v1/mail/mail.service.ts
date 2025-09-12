@@ -21,7 +21,10 @@ export class MailService {
   ): void {
     const message = {
       to: to,
-      from: '"Swift Ex" <' + process.env.GMAIL_USER + '>',
+      from:
+        process.env.ENVIRONMENT == 'dev'
+          ? '"Swift Ex" <' + process.env.EMAIL_USER + '>'
+          : '"Swift Ex" <' + process.env.SENDGRID_EMAIL_USER + '>',
       subject: subject,
       cc,
     };
