@@ -68,6 +68,8 @@ aws ssm describe-parameters \
     --query 'Parameters[].Name' \
     --output text | tr '\t' '\n' | while read param_name; do
         param_key=$(basename "$param_name")
+        # Convert parameter name to uppercase for environment variable
+        env_var_name=$(echo "$param_key" | tr '[:lower:]' '[:upper:]')
         param_value=$(aws ssm get-parameter \
             --name "$param_name" \
             --with-decryption \
@@ -76,7 +78,7 @@ aws ssm describe-parameters \
             --query 'Parameter.Value' \
             --output text 2>/dev/null || echo "")
         if [[ -n "$param_value" ]]; then
-            echo "${param_key}=${param_value}" >> /app/.env
+            echo "${env_var_name}=${param_value}" >> /app/.env
         fi
     done
 
