@@ -77,6 +77,7 @@ export class AuthService {
   async resendOtp(sendOtpDto: SendOtpDto): Promise<void> {
     const { email } = sendOtpDto;
     const user: User | null = await this.userService.findOne({ email });
+    console.log('===user ===', { user });
     if (!user) {
       throw new NotFoundException('User not found');
     }
