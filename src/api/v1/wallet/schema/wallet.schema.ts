@@ -1,5 +1,6 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import mongoose from 'mongoose';
+import { SupportedWalletChain } from '../../../../common/enum/chain';
 
 @Schema({ timestamps: true })
 export class Wallet {
@@ -19,17 +20,15 @@ export class Wallet {
   })
   deviceId: mongoose.Schema.Types.ObjectId;
 
-  @Prop()
-  multiChainAddress: string;
-
-  @Prop()
-  stellarAddress: string;
+  @Prop({
+    type: Map,
+    of: String, // each chain name → address
+    default: {},
+  })
+  addresses: Map<SupportedWalletChain, string>;
 
   @Prop({ type: Boolean, default: false })
   isPrimary: boolean;
-
-  @Prop({ required: false, default: null })
-  streamId?: string;
 }
 
 export const WalletSchema = SchemaFactory.createForClass(Wallet);

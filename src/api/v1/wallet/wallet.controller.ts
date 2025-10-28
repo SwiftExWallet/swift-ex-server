@@ -26,13 +26,14 @@ export class WalletController {
     response.status(201).json({ wallet });
   }
 
-  @Get(':walletAddress/multiChain')
+  @Get('/:chain/address/:walletAddress')
   async findByMultiChainAddress(
     @Req() req: any,
     @Res() response,
     @Param() walletAddressDto: WalletAddressDto,
   ) {
-    const wallets = await this.walletService.findByMultiChainAddress(
+    console.log('===== walletAddressDto', { walletAddressDto });
+    const wallets = await this.walletService.findByWalletAddress(
       walletAddressDto,
       req.device._id,
     );

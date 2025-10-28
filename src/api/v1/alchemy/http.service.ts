@@ -22,4 +22,11 @@ export class HttpService {
       data: JSON.stringify(response.data),
     };
   }
+
+  async put(url: string, body: any, headers?: Record<string, string>) {
+    if (headers) {
+      return axios.put(url, body, { headers });
+    }
+    return axios.put(url, body);
+  }
 }
