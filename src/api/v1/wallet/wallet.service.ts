@@ -51,7 +51,8 @@ export class WalletService {
         deviceId: device._id,
       }),
     );
-    await this.addWalletToListener(wallet);
+    if (process.env.ENVIRONMENT == 'prod')
+      await this.addWalletToListener(wallet);
 
     return this.walletRepo.findOne({ _id: wallet._id });
   }
