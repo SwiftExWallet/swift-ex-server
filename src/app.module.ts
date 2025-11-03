@@ -15,15 +15,11 @@ import { MailModule } from './api/v1/mail/mail.module';
 import { AlchemyModule } from './api/v1/alchemy/alchemy.module';
 import { WalletModule } from './api/v1/wallet/wallet.module';
 import { StellarModule } from './api/v1/stellar/stellar.module';
-import { WatcherModule } from './api/v1/watcher/watcher.module';
 import { NotificationModule } from './api/v1/notification/notification.module';
 import { DeviceAuthTokenMiddleware } from './common/middleware/device-auth-token-middleware';
 import { AuthTokenMiddleware } from './common/middleware/auth-token.middleware';
-import { google } from 'googleapis';
 import { MarketDataModule } from './api/v1/market-data/market-data.module';
 import { ScheduleModule } from '@nestjs/schedule';
-
-const OAuth2 = google.auth.OAuth2;
 
 @Module({
   imports: [
@@ -91,7 +87,6 @@ const OAuth2 = google.auth.OAuth2;
     AlchemyModule,
     WalletModule,
     StellarModule,
-    WatcherModule,
     NotificationModule,
     MarketDataModule,
   ],
@@ -166,11 +161,7 @@ export class AppModule {
           method: RequestMethod.POST,
         },
         {
-          path: '/api/v1/wallet/:walletAddress/multiChain',
-          method: RequestMethod.GET,
-        },
-        {
-          path: '/api/v1/wallet/:stellarAddress/stellar',
+          path: '/api/v1/wallet/:chain/address/:walletAddress',
           method: RequestMethod.GET,
         },
         {

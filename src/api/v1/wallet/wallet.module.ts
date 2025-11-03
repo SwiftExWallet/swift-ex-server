@@ -10,9 +10,9 @@ import {
   ActivatedWallet,
   ActivatedWalletSchema,
 } from './schema/activated-wallet.schema';
-import { WatcherModule } from '../watcher/watcher.module';
 import { StellarModule } from '../stellar/stellar.module';
 import { NotificationModule } from '../notification/notification.module';
+import { AlchemyModule } from '../alchemy/alchemy.module';
 
 @Module({
   imports: [
@@ -21,9 +21,9 @@ import { NotificationModule } from '../notification/notification.module';
       { name: ActivatedWallet.name, schema: ActivatedWalletSchema },
     ]),
     UsersModule,
-    WatcherModule,
     StellarModule,
     NotificationModule,
+    AlchemyModule,
   ],
   providers: [WalletService, WalletRepository, ActivatedWalletRepository],
   controllers: [WalletController],

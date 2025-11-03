@@ -15,9 +15,10 @@ import { WalletAddressDto } from './dto/wallet-address.dto';
 import { Device } from '../device/schema/device.schema';
 import { ActivatedWalletRepository } from './activated-wallet.repository';
 import { ActivatedWallet } from './schema/activated-wallet.schema';
-import { WatcherService } from '../watcher/watcher.service';
 import { StellarService } from '../stellar/stellar.service';
 import { FirebaseNotificationService } from '../notification/firebase/notification.service';
+import { HttpService } from '../alchemy/http.service';
+import { SupportedWalletChain } from 'src/common/enum/chain';
 
 @Injectable()
 export class WalletService {
@@ -27,9 +28,9 @@ export class WalletService {
     private readonly walletRepo: WalletRepository,
     private readonly activatedWalletRepo: ActivatedWalletRepository,
     private readonly userService: UsersService,
-    private readonly watcherService: WatcherService,
     private readonly stellarService: StellarService,
     private readonly notificationService: FirebaseNotificationService,
+    private readonly httpService: HttpService,
   ) {}
 
   async create(
@@ -45,11 +46,26 @@ export class WalletService {
       createWalletDto = Object.assign(createWalletDto, { userId });
     }
 
-    const wallet = await this.walletRepo.create(
-      Object.assign(createWalletDto, { deviceId: device._id }),
+    const wallet: Wallet = await this.walletRepo.create(
+      Object.assign(createWalletDto, {
+        deviceId: device._id,
+      }),
     );
-    await this.updateThirdPartyWebhookServices(wallet, device);
+    await this.addWalletToListener(wallet);
+
     return this.walletRepo.findOne({ _id: wallet._id });
+  }
+
+  async addWalletToListener(wallet: Wallet) {
+    const headers = {
+      Authorization: `Bearer ${process.env.AUTH_TOKEN}`,
+      'Content-Type': 'application/json',
+    };
+    return this.httpService.put(
+      process.env.LISTENER_API_URL as string,
+      wallet,
+      headers,
+    );
   }
 
   async findWalletByUserId(
@@ -68,12 +84,14 @@ export class WalletService {
     return this.walletRepo.find({ stellarAddress, deviceId });
   }
 
-  async findByMultiChainAddress(
+  async findByWalletAddress(
     walletAddressDto: WalletAddressDto,
     deviceId: mongoose.Schema.Types.ObjectId,
   ): Promise<Wallet[] | null> {
-    const { walletAddress } = walletAddressDto;
-    return this.walletRepo.find({ multiChainAddress: walletAddress, deviceId });
+    const { walletAddress, chain } = walletAddressDto;
+    const key = `addresses.${SupportedWalletChain[chain]}`;
+    console.log(key);
+    return this.walletRepo.find({ [key]: walletAddress, deviceId });
   }
 
   async findByMultiChainAddressWithoutDevice(
@@ -142,7 +160,8 @@ export class WalletService {
       throw new NotFoundException(`Wallet not found`);
     }
     this.logger.log('==== preparing transaction to send XLM to wallet==');
-    const xdr = await this.stellarService.activateWalletBySendingXlm(stellarAddress);
+    const xdr =
+      await this.stellarService.activateWalletBySendingXlm(stellarAddress);
 
     await this.notificationService.sendNotification(device.fcmToken, {
       title: 'Activate',
@@ -152,34 +171,34 @@ export class WalletService {
     return xdr;
   }
 
-  private async updateThirdPartyWebhookServices(
-    wallet: Wallet,
-    device: Device,
-  ) {
-    this.logger.log('==== updating sorbon hooks ===', {
-      stellarAddress: wallet.stellarAddress,
-    });
-    // updating sorobon hooks (stellar)
-    this.watcherService.addWalletToSorobon(
-      wallet.stellarAddress,
-      device.fcmToken,
-    );
+  // private async updateThirdPartyWebhookServices(
+  //   wallet: Wallet,
+  //   device: Device,
+  // ) {
+  //   this.logger.log('==== updating sorbon hooks ===', {
+  //     stellarAddress: wallet.stellarAddress,
+  //   });
+  //   // updating sorobon hooks (stellar)
+  //   this.watcherService.addWalletToSorobon(
+  //     wallet.stellarAddress,
+  //     device.fcmToken,
+  //   );
 
-    // updating moralis (multichain)
-    this.logger.log('==== updating moralis ===', {
-      multiChainAddress: wallet.multiChainAddress,
-    });
-    const { newStream, stream } = await this.watcherService.addWalletToMoralis(
-      wallet,
-      device.fcmToken,
-    );
-    if (newStream) {
-      this.logger.log('new stream', { newStream, stream });
+  //   // updating moralis (multichain)
+  //   this.logger.log('==== updating moralis ===', {
+  //     multiChainAddress: wallet.multiChainAddress,
+  //   });
+  //   const { newStream, stream } = await this.watcherService.addWalletToMoralis(
+  //     wallet,
+  //     device.fcmToken,
+  //   );
+  //   if (newStream) {
+  //     this.logger.log('new stream', { newStream, stream });
 
-      const parsedStreamId = typeof stream === 'string' ? stream : stream.id;
-      this.logger.log('stream', { stream });
+  //     const parsedStreamId = typeof stream === 'string' ? stream : stream.id;
+  //     this.logger.log('stream', { stream });
 
-      return this.walletRepo.updateStreamId(wallet?._id, parsedStreamId);
-    }
-  }
+  //     return this.walletRepo.updateStreamId(wallet?._id, parsedStreamId);
+  //   }
+  // }
 }

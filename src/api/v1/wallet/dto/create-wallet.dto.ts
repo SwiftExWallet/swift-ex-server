@@ -1,19 +1,24 @@
-import { IsNotEmpty, IsOptional } from 'class-validator';
+import { IsNotEmpty, IsObject, IsOptional } from 'class-validator';
 import mongoose from 'mongoose';
+import { SupportedWalletChain } from '../../../../common/enum/chain';
+import { KeysFromEnum } from '../../../../common/decorator/keyFromEnum';
+
+export type AddressesDto = Record<SupportedWalletChain, string>;
 
 export class CreateWalletDto {
   @IsOptional()
-  userId: mongoose.Schema.Types.ObjectId;
+  userId?: mongoose.Schema.Types.ObjectId;
 
   @IsNotEmpty()
-  multiChainAddress: string;
-
-  @IsNotEmpty()
-  stellarAddress: string;
-
-  @IsOptional()
-  isPrimary: boolean;
+  @IsObject()
+  @KeysFromEnum(SupportedWalletChain, {
+    message: 'addresses key must match supported value',
+  })
+  addresses: AddressesDto;
 
   @IsOptional()
-  deviceId: mongoose.Schema.Types.ObjectId;
+  isPrimary?: boolean;
+
+  @IsOptional()
+  deviceId?: mongoose.Schema.Types.ObjectId;
 }
