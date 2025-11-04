@@ -2,9 +2,9 @@ name: Deploy to ECR and ECS
 
 on:
   push:
-    branches: [ devops, main ]
+    branches: [ devops, dev, main ]
   pull_request:
-    branches: [ devops, main ]
+    branches: [ devops, dev, main ]
 
 env:
   AWS_REGION: ap-south-1
