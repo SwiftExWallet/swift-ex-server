@@ -106,6 +106,10 @@ export class AppModule {
           path: '/api/v1/device/:uniqueId/unique-id',
           method: RequestMethod.GET,
         },
+        {
+          path: '/health',
+          method: RequestMethod.GET,
+        },
       )
       .forRoutes('*');
 
@@ -179,6 +183,10 @@ export class AppModule {
         {
           path: 'api/v1/alchemy/fetch-quotes',
           method: RequestMethod.POST,
+        },
+        {
+          path: '/health',
+          method: RequestMethod.GET,
         },
       )
       .forRoutes('*');
