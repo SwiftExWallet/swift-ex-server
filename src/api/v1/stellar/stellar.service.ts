@@ -42,16 +42,14 @@ export class StellarService {
       networkPassphrase: this.network,
     })
       .addOperation(
-        Operation.payment({
+        Operation.createAccount({
           destination: stellarAddress,
-          asset: Asset.native(),
-          amount: process.env.STELLAR_AMOUNT as string,
+          startingBalance:process.env.STELLAR_AMOUNT as string,
         }),
       )
       .addOperation(
         Operation.changeTrust({
           asset: USDC,
-          limit: process.env.STELLAR_USDC_TRUST_LIMIT as string,
           source: stellarAddress,
         }),
       )
