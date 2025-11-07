@@ -1,3 +1,7 @@
+import {
+  GetSecretValueCommand,
+  SecretsManagerClient,
+} from '@aws-sdk/client-secrets-manager';
 import { Injectable, Logger } from '@nestjs/common';
 import {
   Networks,
@@ -24,16 +28,24 @@ export class StellarService {
       process.env.RPC_STELLAR as string,
     );
   }
+
   async activateWalletBySendingXlm(stellarAddress: string) {
-    const sourceKeypair = Keypair.fromSecret(
-      process.env.ACTIVATE_STELLAR_ADDRESS as string,
-    );
+    const activateStellarAddress =
+      process.env.ENVIRONMENT == 'prod'
+        ? await this.getStellarAddress()
+        : process.env.ACTIVATE_STELLAR_ADDRESS;
+
+    const sourceKeypair = Keypair.fromSecret(activateStellarAddress);
+
     const sourceAccount = await this.server.loadAccount(
       sourceKeypair.publicKey(),
     );
 
     this.logger.log('===== getting asset ====');
-    const USDC = new StellarSdk.Asset('USDC', process.env.STELLAR_USDC_ADDRESS as string);
+    const USDC = new StellarSdk.Asset(
+      'USDC',
+      process.env.STELLAR_USDC_ADDRESS as string,
+    );
 
     this.logger.log('===== building  transaction ====');
 
@@ -61,5 +73,22 @@ export class StellarService {
     transaction.sign(sourceKeypair);
     const xdr = transaction.toEnvelope().toXDR('base64');
     return { xdr };
+  }
+
+  async getStellarAddress() {
+    const secretManger = new SecretsManagerClient({
+      region: process.env.AWS_REGION,
+    });
+
+    const command = new GetSecretValueCommand({
+      SecretId: process.env.SECRET_ID_NAME,
+    });
+    const response = await secretManger.send(command);
+    if (!response.SecretString) {
+      throw new Error('Invalid secret name');
+    }
+
+    const secret = JSON.parse(response.SecretString);
+    return secret.STELLAR_ADDRESS;
   }
 }
