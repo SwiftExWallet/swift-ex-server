@@ -153,10 +153,12 @@ export class WalletService {
         `Another address is already activated on this device`,
       );
     }
-    const wallet: Wallet | null = await this.walletRepo.findOne({
-      stellarAddress,
+    const key = `addresses.${SupportedWalletChain.xlm}`;
+    const wallets: Wallet[] | null = await this.walletRepo.find({
+      [key]: stellarAddress,
       deviceId: device._id,
     });
+    const wallet = wallets && wallets.length > 0 ? wallets[0] : null;
     if (!wallet) {
       throw new NotFoundException(`Wallet not found`);
     }
@@ -164,10 +166,6 @@ export class WalletService {
     const xdr =
       await this.stellarService.activateWalletBySendingXlm(stellarAddress);
 
-    await this.notificationService.sendNotification(device.fcmToken, {
-      title: 'Activate',
-      body: `Congratulations! ${process.env.STELLAR_AMOUNT} XLM has been successfully added to your wallet.`,
-    });
 
     return xdr;
   }
