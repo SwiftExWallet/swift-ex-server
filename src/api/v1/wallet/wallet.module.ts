@@ -13,19 +13,23 @@ import {
 import { StellarModule } from '../stellar/stellar.module';
 import { NotificationModule } from '../notification/notification.module';
 import { AlchemyModule } from '../alchemy/alchemy.module';
+import { WalletSyncFailedService } from './wallet-sync-failed.service';
+import { WalletSyncFailed, WalletSyncFailedSchema } from './schema/wallet-sync-failed.schema';
+
 
 @Module({
   imports: [
     MongooseModule.forFeature([
       { name: Wallet.name, schema: WalletSchema },
       { name: ActivatedWallet.name, schema: ActivatedWalletSchema },
+      { name: WalletSyncFailed.name, schema: WalletSyncFailedSchema },
     ]),
     UsersModule,
     StellarModule,
     NotificationModule,
     AlchemyModule,
   ],
-  providers: [WalletService, WalletRepository, ActivatedWalletRepository],
+  providers: [WalletService, WalletRepository, ActivatedWalletRepository,WalletSyncFailedService],
   controllers: [WalletController],
 })
 export class WalletModule {}
