@@ -19,6 +19,7 @@ import { StellarService } from '../stellar/stellar.service';
 import { FirebaseNotificationService } from '../notification/firebase/notification.service';
 import { HttpService } from '../alchemy/http.service';
 import { SupportedWalletChain } from 'src/common/enum/chain';
+import { WalletSyncFailedService } from './wallet-sync-failed.service';
 
 @Injectable()
 export class WalletService {
@@ -31,6 +32,7 @@ export class WalletService {
     private readonly stellarService: StellarService,
     private readonly notificationService: FirebaseNotificationService,
     private readonly httpService: HttpService,
+    private readonly walletSyncFailedService:WalletSyncFailedService
   ) {}
 
   async create(
@@ -52,21 +54,35 @@ export class WalletService {
       }),
     );
     if (process.env.ENVIRONMENT == 'prod')
-      await this.addWalletToListener(wallet);
+        this.addWalletToListener(wallet);
 
     return this.walletRepo.findOne({ _id: wallet._id });
   }
 
   async addWalletToListener(wallet: Wallet) {
-    const headers = {
-      Authorization: `Bearer ${process.env.AUTH_TOKEN}`,
-      'Content-Type': 'application/json',
-    };
-    return this.httpService.put(
-      process.env.LISTENER_API_URL as string,
-      wallet,
-      headers,
-    );
+    try {
+      const headers = {
+        Authorization: `Bearer ${process.env.AUTH_TOKEN}`,
+        'Content-Type': 'application/json',
+      };
+      await this.httpService.put(
+        process.env.LISTENER_API_URL as string,
+        wallet,
+        headers,
+      );
+    } catch (error) {
+      await this.walletSyncFailedService.markWalletAsSyncFailed({
+        userId: wallet.deviceId,
+        addresses: {
+          eth: wallet.addresses.get(SupportedWalletChain.eth) || '',
+          bnb: wallet.addresses.get(SupportedWalletChain.bnb) || '',
+          xlm: wallet.addresses.get(SupportedWalletChain.xlm) || '',
+          multi: wallet.addresses.get(SupportedWalletChain.multi) || '',
+        },
+        syncError: error
+      })
+      console.error("addWalletToListener faild", error);
+    }
   }
 
   async findWalletByUserId(
