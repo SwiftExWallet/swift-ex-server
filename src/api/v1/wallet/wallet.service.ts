@@ -53,8 +53,10 @@ export class WalletService {
         deviceId: device._id,
       }),
     );
-    if (process.env.ENVIRONMENT == 'prod')
-        this.addWalletToListener(wallet);
+    if (process.env.ENVIRONMENT == 'prod'){
+      this.logger.debug("======= syncing wallet =======");
+      this.addWalletToListener(wallet);
+    }
 
     return this.walletRepo.findOne({ _id: wallet._id });
   }
