@@ -1,5 +1,6 @@
 import { Injectable, OnModuleInit, Logger } from '@nestjs/common';
 import * as maxmind from 'maxmind';
+import restrictedCountries from './util/restrictedCountries.json';
 
 interface IPResult {
   countryCode: string | null;
@@ -11,35 +12,7 @@ interface IPResult {
 export class GeoLiteIpService implements OnModuleInit {
   private lookup: any = null;
   private readonly logger = new Logger(GeoLiteIpService.name);
-  private readonly restrictedCountries = [
-    "KP",
-    "IR",
-    "SY",
-    "RU",
-    "UA",
-    "BY",
-    "LY",
-    "BI",
-    "CF",
-    "CD",
-    "CU",
-    "YE",
-    "SO",
-    "ZW",
-    "ML",
-    "GN",
-    "GW",
-    "LB",
-    "SD",
-    "SS",
-    "AF",
-    "EH",
-    "CN",
-    "MD",
-    "GE",
-    "CY",
-    "CM" 
-];
+  private restrictedCountries: any = null;
 
   async onModuleInit() {
     await this.init();
@@ -47,6 +20,7 @@ export class GeoLiteIpService implements OnModuleInit {
 
   private async init(): Promise<void> {
     try {
+      this.restrictedCountries = restrictedCountries;
       this.lookup = await maxmind.open(process.env.COUNTRY_DB as string);
       this.logger.log('GeoLite Country DB loaded successfully');
     } catch (error) {
@@ -67,11 +41,9 @@ export class GeoLiteIpService implements OnModuleInit {
         return { countryCode: null, countryName: null, isRestricted: false };
       }
 
-      const countryCode = result.country.iso_code;
-      const countryName = result.country.names?.en;
-      const isRestricted = this.restrictedCountries.includes(countryCode);
+      const isRestricted = this.restrictedCountries.includes(result.country.iso_code);
 
-      return { countryCode, countryName, isRestricted };
+      return { countryCode:result.country.iso_code, countryName:result.country.names?.en, isRestricted };
     } catch (error) {
       this.logger.warn(`IP lookup failed for ${ip}`);
       return { countryCode: null, countryName: null, isRestricted: true };

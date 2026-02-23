@@ -1,16 +1,17 @@
-import { Controller, Get} from "@nestjs/common";
+import { Controller, Get, Logger} from "@nestjs/common";
 import { AppAvailableService } from "./app-available.service";
 import { ClientIp } from "./ip.decorator";
 
 @Controller('api/v1/app-available')
 export class AppAvailable {
+    private readonly logger = new Logger(AppAvailable.name);
     constructor(private readonly appAvailableService: AppAvailableService) { }
 
     @Get('/')
     async checkAppAvailability(
         @ClientIp() ip: string
     ) {
-        console.log('===== user Ip address =====',ip);
+        this.logger.log('===== user Ip address =====',ip);
         const result = await this.appAvailableService.checkAppAvailability(ip);
         return {
             ...result,

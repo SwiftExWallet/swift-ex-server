@@ -103,17 +103,18 @@ export class AlchemyService {
   ): Promise<string> {
     this.logger.log('==== creating alchemy buy started===');
     const orderTimestamp = Date.now().toString();
+    const { fiatCurrency, amount, cryptoCurrency, network, address } = createBuyOrderDto;
     const buyPayload = {
      appId: process.env.ALCHEMY_PAY_APPID as string,
       merchantOrderNo: Math.floor(
         1000000000 + Math.random() * 9000000000,
       ).toString(),
       timestamp: Date.now().toString(),
-      fiat:createBuyOrderDto.fiatCurrency,
-      fiatAmount:createBuyOrderDto.amount,
-      crypto:createBuyOrderDto.cryptoCurrency,
-      network:createBuyOrderDto.network,
-      address:createBuyOrderDto.address,
+      fiat:fiatCurrency,
+      fiatAmount:amount,
+      crypto:cryptoCurrency,
+      network:network,
+      address:address,
       displayAddress:true,
       type: "buy",
       redirectUrl: process.env.ALCHEMY_PAY_REDIRECT_URL,
