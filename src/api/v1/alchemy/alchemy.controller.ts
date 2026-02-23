@@ -4,7 +4,7 @@ import { Response } from 'express';
 import { QuotesDto } from './dto/alchemy-quotes-order.dto';
 import { CreateBuyOrderDto } from './dto/alchemy-create-order.dto';
 import { SellOrderDto } from './dto/alchemy-sell-order.dto';
-import { UserQueueService } from 'src/common/user-queue/user-queue.service';
+import { UserQueueService } from '../../../common/user-queue/user-queue.service';
 
 @Controller('api/v1/alchemy/')
 export class AlchemyController {
