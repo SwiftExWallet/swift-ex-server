@@ -20,6 +20,8 @@ import { DeviceAuthTokenMiddleware } from './common/middleware/device-auth-token
 import { AuthTokenMiddleware } from './common/middleware/auth-token.middleware';
 import { MarketDataModule } from './api/v1/market-data/market-data.module';
 import { ScheduleModule } from '@nestjs/schedule';
+import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
+import { APP_GUARD } from '@nestjs/core';
 
 @Module({
   imports: [
@@ -76,8 +78,27 @@ import { ScheduleModule } from '@nestjs/schedule';
     JwtModule.register({
       global: true,
       secret: process.env.JWT_SECRET,
-      signOptions: { expiresIn: process.env.JWT_EXPIRE },
+      signOptions: { expiresIn: process.env.JWT_EXPIRE as any },
       verifyOptions: { ignoreExpiration: false },
+    }),
+    ThrottlerModule.forRootAsync({
+      useFactory: () => ({
+        throttlers: [
+          {
+            ttl:
+              parseInt(
+                (process.env.THROTTLING_TTL_IN_SECONDS as string) ?? 60,
+              ) * 1000, // Number of request window in milliseconds
+            limit: parseInt((process.env.REQUEST_PER_MINUTE as string) ?? 1), // Number of  request
+            name: 'device-token',
+            getTracker: (req): string => {
+              return (
+                (req.headers['x-auth-device-token'] as string) || 'anonymous'
+              );
+            },
+          },
+        ],
+      }),
     }),
     ScheduleModule.forRoot(),
     UsersModule,
@@ -91,7 +112,13 @@ import { ScheduleModule } from '@nestjs/schedule';
     MarketDataModule,
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [
+    {
+      provide: APP_GUARD,
+      useClass: ThrottlerGuard,
+    },
+    AppService,
+  ],
 })
 export class AppModule {
   configure(consumer: MiddlewareConsumer): any {
