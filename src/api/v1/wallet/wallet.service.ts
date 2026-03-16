@@ -53,8 +53,10 @@ export class WalletService {
         deviceId: device._id,
       }),
     );
-    if (process.env.ENVIRONMENT == 'prod')
-        this.addWalletToListener(wallet);
+    if (process.env.ENVIRONMENT == 'prod'){
+      this.logger.debug("======= syncing wallet =======");
+      this.addWalletToListener(wallet);
+    }
 
     return this.walletRepo.findOne({ _id: wallet._id });
   }
@@ -67,17 +69,25 @@ export class WalletService {
       };
       await this.httpService.put(
         process.env.LISTENER_API_URL as string,
-        wallet,
+        {
+          deviceId:wallet.deviceId,
+          addresses: {
+            eth: wallet.addresses.get(SupportedWalletChain.eth)?.toLocaleLowerCase() || '',
+            bnb: wallet.addresses.get(SupportedWalletChain.bnb)?.toLocaleLowerCase() || '',
+            xlm: wallet.addresses.get(SupportedWalletChain.xlm) || '',
+            multi: wallet.addresses.get(SupportedWalletChain.multi)?.toLocaleLowerCase() || '',
+          },
+        },
         headers,
       );
     } catch (error) {
       await this.walletSyncFailedService.markWalletAsSyncFailed({
         userId: wallet.deviceId,
         addresses: {
-          eth: wallet.addresses.get(SupportedWalletChain.eth) || '',
-          bnb: wallet.addresses.get(SupportedWalletChain.bnb) || '',
+          eth: wallet.addresses.get(SupportedWalletChain.eth)?.toLocaleLowerCase() || '',
+          bnb: wallet.addresses.get(SupportedWalletChain.bnb)?.toLocaleLowerCase() || '',
           xlm: wallet.addresses.get(SupportedWalletChain.xlm) || '',
-          multi: wallet.addresses.get(SupportedWalletChain.multi) || '',
+          multi: wallet.addresses.get(SupportedWalletChain.multi)?.toLocaleLowerCase() || '',
         },
         syncError: error
       })

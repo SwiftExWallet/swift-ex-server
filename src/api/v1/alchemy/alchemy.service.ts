@@ -100,52 +100,48 @@ export class AlchemyService {
   async orderCreate(
     createBuyOrderDto: CreateBuyOrderDto,
     user: User,
-  ): Promise<AxiosResponse | void> {
-    const { email } = user;
+  ): Promise<string> {
     this.logger.log('==== creating alchemy buy started===');
     const orderTimestamp = Date.now().toString();
-    const payload = Object.assign(createBuyOrderDto, {
-      side: 'BUY',
+    const { fiatCurrency, amount, cryptoCurrency, network, address } = createBuyOrderDto;
+    const buyPayload = {
+     appId: process.env.ALCHEMY_PAY_APPID as string,
       merchantOrderNo: Math.floor(
         1000000000 + Math.random() * 9000000000,
       ).toString(),
-      depositType: 2,
+      timestamp: Date.now().toString(),
+      fiat:fiatCurrency,
+      fiatAmount:amount,
+      crypto:cryptoCurrency,
+      network:network,
+      address:address,
+      displayAddress:true,
+      type: "buy",
       redirectUrl: process.env.ALCHEMY_PAY_REDIRECT_URL,
       callbackUrl: process.env.ALCHEMY_PAY_WEBHOOK_URL,
-    });
-    this.logger.log('==== creating alchemy buy order ===');
-    const signKey: string = await this.urlSigner.signPayload(
+      language:'en-US',
+      showTable:'buy',
+    };
+    const rawDataToSign = this.getStringToSign(buyPayload);
+    const requestPathWithParams =
+      "/index/rampPageBuy" + '?' + rawDataToSign;
+    const onRampSignature = this.generateSignature(
       orderTimestamp,
-      payload,
-      AlchemyMethod.POST,
-      process.env.ALCHEMY_PAY_ORDER_CREATION_REQUEST_URL as string,
+      AlchemyMethod.GET,
+      requestPathWithParams,
+      process.env.ALCHEMY_PAY_SECRET as string,
     );
-    const userTokenTimestamp = String(Date.now());
-
-    const accessToken = await this.getAuthAccessToken(
-      userTokenTimestamp,
-      email,
-    );
-    this.logger.log('==== creating alchemy access token ===');
-    if (!accessToken.status) {
-      throw new BadRequestException('Error in access token creation');
-    }
-    const orderCreationAccessTokenData = JSON.parse(accessToken.data);
-
-    const headers = this.buildAppHeaders(orderTimestamp, signKey);
-
-    headers.set('access-token', orderCreationAccessTokenData.data.accessToken);
     this.logger.log('==== alchemy buy order created ===');
-    return this.httpService.request({
-      body: payload,
-      method: AlchemyMethod.POST,
-      url: process.env.ALCHEMY_PAY_ORDER_CREATION_REQUEST_URL as string,
-      headers,
-    });
+    const finalUrl =
+      process.env.ALCHEMY_PAY_USER_SELL_ORDER_URL +
+      rawDataToSign +
+      '&sign=' +
+      onRampSignature;
+
+    return finalUrl;
   }
 
   async sellOrderCreate(payload: SellOrderDto, user: User): Promise<string> {
-    const { email } = user;
     this.logger.log('==== creating alchemy sell order ===');
     const sellPayload = buildAlchemySellOrderPayload(payload);
 
@@ -218,18 +214,18 @@ export class AlchemyService {
     return headers;
   }
 
-  private async getAuthAccessToken(timestamp: string, email: string) {
+  private async getAuthAccessToken(timestamp: string, uid: string) {
     this.logger.log('==== getting alchemy auth access token started===');
     const sign: string = await this.urlSigner.signPayload(
       timestamp,
-      { email },
+      { uid },
       AlchemyMethod.POST,
       process.env.ALCHEMY_PAY_USER_AUTH_TOKEN_REQUEST_URL as string,
     );
     const headers: AxiosHeaders = this.buildAppHeaders(timestamp, sign);
     this.logger.log('==== getting alchemy auth access token end===');
     return this.httpService.request({
-      body: { email },
+      body: { uid },
       method: AlchemyMethod.POST,
       url: process.env.ALCHEMY_PAY_USER_AUTH_TOKEN_REQUEST_URL as string,
       headers,

@@ -20,6 +20,7 @@ import { DeviceAuthTokenMiddleware } from './common/middleware/device-auth-token
 import { AuthTokenMiddleware } from './common/middleware/auth-token.middleware';
 import { MarketDataModule } from './api/v1/market-data/market-data.module';
 import { ScheduleModule } from '@nestjs/schedule';
+import { AppAvailableModule } from './api/v1/app-available/app-available.module';
 
 @Module({
   imports: [
@@ -89,6 +90,7 @@ import { ScheduleModule } from '@nestjs/schedule';
     StellarModule,
     NotificationModule,
     MarketDataModule,
+    AppAvailableModule,
   ],
   controllers: [AppController],
   providers: [AppService],
@@ -108,6 +110,10 @@ export class AppModule {
         },
         {
           path: '/health',
+          method: RequestMethod.GET,
+        },
+        {
+          path: '/api/v1/app-available',
           method: RequestMethod.GET,
         },
       )
@@ -187,6 +193,22 @@ export class AppModule {
         {
           path: '/health',
           method: RequestMethod.GET,
+        },
+        {
+          path: '/api/v1/app-available',
+          method: RequestMethod.GET,
+        },
+        {
+          path: '/api/v1/app-available',
+          method: RequestMethod.GET,
+        },
+        {
+          path: '/api/v1/alchemy/create-sell-order',
+          method: RequestMethod.POST,
+        },
+        {
+          path: '/api/v1/alchemy/create-buy-order',
+          method: RequestMethod.POST,
         },
       )
       .forRoutes('*');
