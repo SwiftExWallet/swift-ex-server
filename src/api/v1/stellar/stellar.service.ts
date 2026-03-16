@@ -32,10 +32,10 @@ export class StellarService {
   async activateWalletBySendingXlm(stellarAddress: string) {
     const activateStellarAddress =
       process.env.ENVIRONMENT == 'prod'
-        ? await this.getStellarAddress()
+        ? process.env.ACTIVATE_STELLAR_ADDRESS
         : process.env.ACTIVATE_STELLAR_ADDRESS;
 
-    const sourceKeypair = Keypair.fromSecret(activateStellarAddress);
+    const sourceKeypair = Keypair.fromSecret(process.env.ACTIVATE_STELLAR_ADDRESS as string);
 
     const sourceAccount = await this.server.loadAccount(
       sourceKeypair.publicKey(),

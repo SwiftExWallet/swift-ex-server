@@ -4,15 +4,19 @@ import { Response } from 'express';
 import { QuotesDto } from './dto/alchemy-quotes-order.dto';
 import { CreateBuyOrderDto } from './dto/alchemy-create-order.dto';
 import { SellOrderDto } from './dto/alchemy-sell-order.dto';
+import { UserQueueService } from '../../../common/user-queue/user-queue.service';
 
 @Controller('api/v1/alchemy/')
 export class AlchemyController {
-  constructor(private readonly alchemyService: AlchemyService) {}
+  constructor(private readonly alchemyService: AlchemyService ,private userQueueService: UserQueueService) {}
 
   @Post('fetch-quotes')
   async fetchQuotes(@Res() response: Response, @Body() quotesDto: QuotesDto) {
-    const quotesRes = await this.alchemyService.fetchQuotes(quotesDto);
-    response.send({ success: quotesRes.status, data: quotesRes.data });
+    return this.userQueueService.processUserRequest(async () => {
+      console.log("Processing user ");
+      const quotesRes = await this.alchemyService.fetchQuotes(quotesDto);
+      response.send({ success: quotesRes.status, data: quotesRes.data });
+    });
   }
 
   @Post('create-buy-order')
