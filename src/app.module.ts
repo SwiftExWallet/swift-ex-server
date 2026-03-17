@@ -20,8 +20,8 @@ import { DeviceAuthTokenMiddleware } from './common/middleware/device-auth-token
 import { AuthTokenMiddleware } from './common/middleware/auth-token.middleware';
 import { MarketDataModule } from './api/v1/market-data/market-data.module';
 import { ScheduleModule } from '@nestjs/schedule';
-import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
-import { APP_GUARD } from '@nestjs/core';
+import { AppAvailableModule } from './api/v1/app-available/app-available.module';
+import { PortfolioModule } from './api/v1/portfolio/portfolio.module';
 
 @Module({
   imports: [
@@ -81,25 +81,6 @@ import { APP_GUARD } from '@nestjs/core';
       signOptions: { expiresIn: process.env.JWT_EXPIRE as any },
       verifyOptions: { ignoreExpiration: false },
     }),
-    ThrottlerModule.forRootAsync({
-      useFactory: () => ({
-        throttlers: [
-          {
-            ttl:
-              parseInt(
-                (process.env.THROTTLING_TTL_IN_SECONDS as string) ?? 60,
-              ) * 1000, // Number of request window in milliseconds
-            limit: parseInt((process.env.REQUEST_PER_MINUTE as string) ?? 1), // Number of  request
-            name: 'device-token',
-            getTracker: (req): string => {
-              return (
-                (req.headers['x-auth-device-token'] as string) || 'anonymous'
-              );
-            },
-          },
-        ],
-      }),
-    }),
     ScheduleModule.forRoot(),
     UsersModule,
     DeviceModule,
@@ -110,15 +91,11 @@ import { APP_GUARD } from '@nestjs/core';
     StellarModule,
     NotificationModule,
     MarketDataModule,
+    AppAvailableModule,
+    PortfolioModule,
   ],
   controllers: [AppController],
-  providers: [
-    {
-      provide: APP_GUARD,
-      useClass: ThrottlerGuard,
-    },
-    AppService,
-  ],
+  providers: [AppService],
 })
 export class AppModule {
   configure(consumer: MiddlewareConsumer): any {
@@ -135,6 +112,10 @@ export class AppModule {
         },
         {
           path: '/health',
+          method: RequestMethod.GET,
+        },
+        {
+          path: '/api/v1/app-available',
           method: RequestMethod.GET,
         },
       )
@@ -214,6 +195,22 @@ export class AppModule {
         {
           path: '/health',
           method: RequestMethod.GET,
+        },
+        {
+          path: '/api/v1/app-available',
+          method: RequestMethod.GET,
+        },
+        {
+          path: '/api/v1/app-available',
+          method: RequestMethod.GET,
+        },
+        {
+          path: '/api/v1/alchemy/create-sell-order',
+          method: RequestMethod.POST,
+        },
+        {
+          path: '/api/v1/alchemy/create-buy-order',
+          method: RequestMethod.POST,
         },
       )
       .forRoutes('*');
