@@ -21,6 +21,7 @@ import { AuthTokenMiddleware } from './common/middleware/auth-token.middleware';
 import { MarketDataModule } from './api/v1/market-data/market-data.module';
 import { ScheduleModule } from '@nestjs/schedule';
 import { AppAvailableModule } from './api/v1/app-available/app-available.module';
+import { PortfolioModule } from './api/v1/portfolio/portfolio.module';
 
 @Module({
   imports: [
@@ -77,7 +78,7 @@ import { AppAvailableModule } from './api/v1/app-available/app-available.module'
     JwtModule.register({
       global: true,
       secret: process.env.JWT_SECRET,
-      signOptions: { expiresIn: process.env.JWT_EXPIRE },
+      signOptions: { expiresIn: process.env.JWT_EXPIRE as any },
       verifyOptions: { ignoreExpiration: false },
     }),
     ScheduleModule.forRoot(),
@@ -91,6 +92,7 @@ import { AppAvailableModule } from './api/v1/app-available/app-available.module'
     NotificationModule,
     MarketDataModule,
     AppAvailableModule,
+    PortfolioModule,
   ],
   controllers: [AppController],
   providers: [AppService],

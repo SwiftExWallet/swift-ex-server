@@ -29,4 +29,11 @@ export class HttpService {
     }
     return axios.put(url, body);
   }
+
+  async post(url: string, body: any, headers?: Record<string, string>) {
+    if (headers) {
+      return axios.post(url, body, { headers });
+    }
+    return axios.post(url, body);
+  }
 }
