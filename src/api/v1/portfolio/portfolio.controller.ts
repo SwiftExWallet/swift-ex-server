@@ -1,7 +1,7 @@
 import { Controller, Get, Param, Req, Res } from '@nestjs/common';
 import { PortfolioService } from './portfolio.service';
 
-@Controller('api/v1portfolio')
+@Controller('api/v1/portfolio')
 export class PortfolioController {
   constructor(private readonly portfolioService: PortfolioService) {}
 
@@ -12,6 +12,6 @@ export class PortfolioController {
     @Param('address') address: string,
   ) {
     const tokens = await this.portfolioService.getPortfolioByAddress(address);
-    response.status(201).json({ tokens });
+    response.status(201).json( tokens.data );
   }
 }
