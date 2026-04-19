@@ -1,7 +1,7 @@
 import { IsNotEmpty, IsObject, IsOptional } from 'class-validator';
 import mongoose from 'mongoose';
 import { SupportedWalletChain } from '../../../../common/enum/chain';
-import { KeysFromEnum } from '../../../../common/decorator/keyFromEnum';
+import { KeysFromEnum } from '../../../../common/decorators/keyFromEnum';
 
 export type AddressesDto = Record<SupportedWalletChain, string>;
 
