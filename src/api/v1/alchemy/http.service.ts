@@ -30,6 +30,17 @@ export class HttpService {
     return axios.put(url, body);
   }
 
+  async delete(url: string, body: any, headers?: Record<string, string>) {
+    if (headers) {
+      return axios.delete(url, {
+        data: body,
+        headers,
+      });
+    }
+    return axios.delete(url, {
+      data: body,
+    });
+  }
   async post(url: string, body: any, headers?: Record<string, string>) {
     if (headers) {
       return axios.post(url, body, { headers });

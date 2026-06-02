@@ -112,6 +112,28 @@ export class WalletService {
     }
   }
 
+  async removeWalletToListener(wallet: CreateWalletDto,deviceId:any) {
+    try {
+      const headers = {
+        Authorization: `Bearer ${process.env.AUTH_TOKEN}`,
+        'Content-Type': 'application/json',
+      };
+      await this.httpService.delete(
+        process.env.LISTENER_API_URL as string,
+        {
+          userId: deviceId,
+          addresses: {
+            xlm: wallet.addresses.xlm,
+            multi:wallet.addresses.multi?.toLocaleLowerCase() || '',
+          },
+        },
+        headers,
+      );
+    } catch (error) {
+      console.error('addWalletToListener faild', error);
+    }
+  }
+
   async findWalletByUserId(
     userId: mongoose.Schema.Types.ObjectId,
     deviceId: mongoose.Schema.Types.ObjectId,
