@@ -1,6 +1,6 @@
 import { Injectable, OnModuleInit, Logger } from '@nestjs/common';
 import * as maxmind from 'maxmind';
-import restrictedCountries from './util/restrictedCountries.json';
+import * as restrictedCountries from './util/restrictedCountries.json';
 
 interface IPResult {
   countryCode: string | null;
@@ -45,6 +45,7 @@ export class GeoLiteIpService implements OnModuleInit {
 
       return { countryCode:result.country.iso_code, countryName:result.country.names?.en, isRestricted };
     } catch (error) {
+      this.logger.error("error in ip",error)
       this.logger.warn(`IP lookup failed for ${ip}`);
       return { countryCode: null, countryName: null, isRestricted: true };
     }
