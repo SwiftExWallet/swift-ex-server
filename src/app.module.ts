@@ -22,6 +22,8 @@ import { MarketDataModule } from './api/v1/market-data/market-data.module';
 import { ScheduleModule } from '@nestjs/schedule';
 import { AppAvailableModule } from './api/v1/app-available/app-available.module';
 import { PortfolioModule } from './api/v1/portfolio/portfolio.module';
+import { BanxaModule } from './api/v1/banxa/banxa.module';
+import { MoonPayModule } from './api/v1/moonpay/moonpay.module';
 
 @Module({
   imports: [
@@ -93,6 +95,8 @@ import { PortfolioModule } from './api/v1/portfolio/portfolio.module';
     MarketDataModule,
     AppAvailableModule,
     PortfolioModule,
+    BanxaModule,
+    MoonPayModule
   ],
   controllers: [AppController],
   providers: [AppService],
@@ -117,6 +121,14 @@ export class AppModule {
         {
           path: '/api/v1/app-available',
           method: RequestMethod.GET,
+        },
+        {
+          path: '/api/v1/banxa/banxa',
+          method: RequestMethod.POST,
+        },
+        {
+          path: '/api/v1/moonpay/webhook',
+          method: RequestMethod.POST,
         },
       )
       .forRoutes('*');
@@ -173,6 +185,10 @@ export class AppModule {
           method: RequestMethod.POST,
         },
         {
+          path: '/api/v1/wallet/delete',
+          method: RequestMethod.DELETE,
+        },
+        {
           path: '/api/v1/wallet/:chain/address/:walletAddress',
           method: RequestMethod.GET,
         },
@@ -210,6 +226,46 @@ export class AppModule {
         },
         {
           path: '/api/v1/alchemy/create-buy-order',
+          method: RequestMethod.POST,
+        },
+        {
+          path: '/api/v1/portfolio/:address',
+          method: RequestMethod.GET,
+        },
+        {
+          path: '/api/v1/banxa/fetch-assets',
+          method: RequestMethod.GET,
+        },
+        {
+          path: '/api/v1/banxa/fetch-quotes',
+          method: RequestMethod.POST,
+        },
+        {
+          path: '/api/v1/banxa/create-buy-order',
+          method: RequestMethod.POST,
+        },
+        {
+          path: '/api/v1/banxa/create-sell-order',
+          method: RequestMethod.POST,
+        },
+        {
+          path: '/api/v1/banxa/banxa',
+          method: RequestMethod.POST,
+        },
+        {
+          path: '/api/v1/moonpay/currencies',
+          method: RequestMethod.POST,
+        },
+        {
+          path: '/api/v1/moonpay/quote',
+          method: RequestMethod.POST,
+        },
+        {
+          path: '/api/v1/moonpay/link',
+          method: RequestMethod.POST,
+        },
+        {
+          path: '/api/v1/moonpay/webhook',
           method: RequestMethod.POST,
         },
       )

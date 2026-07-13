@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   Param,
   Patch,
@@ -23,6 +24,16 @@ export class WalletController {
     @Body() createWalletDto: CreateWalletDto,
   ) {
     const wallet = await this.walletService.create(createWalletDto, req.device);
+    response.status(201).json({ wallet });
+  }
+
+  @Delete('/delete')
+  async delete(
+    @Req() req: any,
+    @Res() response,
+    @Body() createWalletDto: CreateWalletDto,
+  ) {
+    const wallet = await this.walletService.removeWalletToListener(createWalletDto, req.device);
     response.status(201).json({ wallet });
   }
 
