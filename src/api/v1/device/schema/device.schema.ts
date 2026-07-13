@@ -29,6 +29,9 @@ export class Device {
 
   @Prop()
   fcmToken: string;
+
+  @Prop({ type: String })
+  referralCode: string;
 }
 
 export const DeviceSchema = SchemaFactory.createForClass(Device);
