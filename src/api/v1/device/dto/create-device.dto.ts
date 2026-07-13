@@ -18,4 +18,7 @@ export class CreateDeviceDto {
 
   @IsNotEmpty()
   fcmToken: string;
+
+  @IsOptional()
+  referralCode: string;
 }
