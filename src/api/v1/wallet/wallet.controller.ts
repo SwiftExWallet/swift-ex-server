@@ -10,7 +10,7 @@ import {
   Res,
 } from '@nestjs/common';
 import { WalletService } from './wallet.service';
-import { CreateWalletDto } from './dto/create-wallet.dto';
+import { AddressesDto, CreateWalletDto } from './dto/create-wallet.dto';
 import { WalletAddressDto } from './dto/wallet-address.dto';
 import { StellarAddressDto } from './dto/stellar-address.dto';
 
@@ -33,7 +33,14 @@ export class WalletController {
     @Res() response,
     @Body() createWalletDto: CreateWalletDto,
   ) {
-    const wallet = await this.walletService.removeWalletToListener(createWalletDto, req.device);
+    const wallet = await this.walletService.removeWalletToListener(
+      {
+        ...createWalletDto,
+        addresses:
+          this.getHeaderWalletAddresses(req) ?? createWalletDto.addresses,
+      },
+      req.device._id,
+    );
     response.status(201).json({ wallet });
   }
 
@@ -43,9 +50,12 @@ export class WalletController {
     @Res() response,
     @Param() walletAddressDto: WalletAddressDto,
   ) {
-    console.log('===== walletAddressDto', { walletAddressDto });
+    const lookupDto = {
+      ...walletAddressDto,
+      walletAddress: req.walletAddress ?? walletAddressDto.walletAddress,
+    };
     const wallets = await this.walletService.findByWalletAddress(
-      walletAddressDto,
+      lookupDto,
       req.device._id,
     );
     return response.status(200).json({ wallets });
@@ -57,8 +67,12 @@ export class WalletController {
     @Res() response,
     @Param() stellarAddressDto: StellarAddressDto,
   ) {
+    const lookupDto = {
+      ...stellarAddressDto,
+      stellarAddress: req.walletAddress ?? stellarAddressDto.stellarAddress,
+    };
     const wallets = await this.walletService.findByStellarAddress(
-      stellarAddressDto,
+      lookupDto,
       req.device._id,
     );
     return response.status(200).json({ wallets });
@@ -79,8 +93,12 @@ export class WalletController {
     @Res() response,
     @Param() stellarAddressDto: StellarAddressDto,
   ) {
+    const assignDto = {
+      ...stellarAddressDto,
+      stellarAddress: req.walletAddress ?? stellarAddressDto.stellarAddress,
+    };
     const wallet = await this.walletService.assignUser(
-      stellarAddressDto,
+      assignDto,
       req.currentUser,
       req.device._id,
     );
@@ -93,10 +111,24 @@ export class WalletController {
     @Res() response,
     @Param() stellarAddressDto: StellarAddressDto,
   ) {
+    const activationDto = {
+      ...stellarAddressDto,
+      stellarAddress: req.walletAddress ?? stellarAddressDto.stellarAddress,
+    };
     const wallet = await this.walletService.activateWallet(
-      stellarAddressDto,
+      activationDto,
       req.device,
     );
     return response.status(200).json({ wallet });
+  }
+
+  private getHeaderWalletAddresses(req: any): AddressesDto | null {
+    if (!req.walletAddress || !req.walletChain) {
+      return null;
+    }
+
+    return {
+      [req.walletChain]: req.walletAddress,
+    } as AddressesDto;
   }
 }

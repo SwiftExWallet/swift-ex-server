@@ -55,5 +55,10 @@ pids
 # Diagnostic reports (https://nodejs.org/api/report.html)
 report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
 
-# Firebase account json file
-src/api/v1/notification/firebase/firebaseServiceAccount.json
+# Firebase service-account JSON files
+src/api/v1/notification/firebase/*.json
+**/*firebase-adminsdk*.json
+**/*firebaseServiceAccount*.json
+**/*FirebaseServiceAccount*.json
+**/*service-account*.json
+**/*serviceAccount*.json

@@ -64,6 +64,8 @@ Create a `.env` file with the following variables:
 # Application
 NODE_ENV=development
 PORT=3000
+CORS_ALLOWED_ORIGINS=http://localhost:3000,http://localhost:5173
+TRUSTED_PROXIES=loopback
 
 # Database
 MONGODB_CONN_STRING=mongodb://localhost:27017
@@ -112,20 +114,24 @@ $ docker-compose up --build
 ## API Endpoints
 
 ### Authentication
+
 - `POST /api/v1/auth/signup` - User registration
 - `POST /api/v1/auth/login` - User login
 - `POST /api/v1/auth/send-otp` - Send OTP
 - `POST /api/v1/auth/verify-otp` - Verify OTP
 
 ### Users
+
 - `GET /api/v1/users/profile` - Get user profile
 - `PUT /api/v1/users/profile` - Update user profile
 
 ### Wallets
+
 - `POST /api/v1/wallet` - Create wallet
 - `GET /api/v1/wallet/address` - Get wallet address
 
 ### Market Data
+
 - `GET /api/v1/market-data` - Get market data
 
 ## Development
@@ -174,6 +180,7 @@ $ ./build.sh
 ### Environment Setup
 
 Ensure your production environment has all required environment variables configured, especially:
+
 - MongoDB connection string
 - JWT secret
 - Gmail OAuth2 credentials
@@ -210,6 +217,7 @@ This project is licensed under the MIT License.
 ## Support
 
 For support and questions:
+
 - Create an issue in the repository
 - Contact the development team
 - Check the NestJS documentation for framework-specific questions

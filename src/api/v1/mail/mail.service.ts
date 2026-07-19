@@ -29,13 +29,11 @@ export class MailService {
       cc,
     };
     if (template != '' && context != '') {
-      console.log('=== yes template===');
       Object.assign(message, {
         template,
         context: context,
       });
     }
-    console.log(JSON.stringify(message));
     if (attachments) {
       Object.assign(message, {
         attachments,

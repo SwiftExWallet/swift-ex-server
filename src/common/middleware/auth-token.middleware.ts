@@ -8,8 +8,8 @@ import {
   ForbiddenException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-import { UsersService } from 'src/api/v1/users/users.service';
-import { Request, Response, NextFunction } from 'express';
+import { UsersService } from '../../api/v1/users/users.service';
+import { Response, NextFunction } from 'express';
 
 @Injectable()
 export class AuthTokenMiddleware implements NestMiddleware {
@@ -20,22 +20,36 @@ export class AuthTokenMiddleware implements NestMiddleware {
 
   async use(req: any, res: Response, next: NextFunction): Promise<any> {
     Logger.log('==== middleware called ===');
-    const route = req.originalUrl;
-    console.log('==== route', route);
-    if (!req.headers['authorization']) {
+    const authorization = req.headers['authorization'];
+    if (!authorization) {
       throw new NotFoundException('Token  not found');
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-    const decodedToken: any = this.jwtService.decode(
-      req.headers['authorization'].replace('Bearer ', ''),
-    );
-
-    if (!decodedToken) {
+    if (
+      typeof authorization !== 'string' ||
+      !authorization.startsWith('Bearer ')
+    ) {
       throw new HttpException('Invalid token', HttpStatus.FORBIDDEN);
     }
+
+    const token = authorization.replace('Bearer ', '').trim();
+    if (!token) {
+      throw new HttpException('Invalid token', HttpStatus.FORBIDDEN);
+    }
+
+    let verifiedToken: any;
+    try {
+      verifiedToken = await this.jwtService.verifyAsync(token);
+    } catch {
+      throw new HttpException('Invalid token', HttpStatus.FORBIDDEN);
+    }
+
+    if (!verifiedToken?._id) {
+      throw new HttpException('Invalid token', HttpStatus.FORBIDDEN);
+    }
+
     const user = await this.userService.findOne({
-      _id: decodedToken._id,
+      _id: verifiedToken._id,
     });
     if (!user) {
       throw new HttpException('Invalid token', HttpStatus.FORBIDDEN);

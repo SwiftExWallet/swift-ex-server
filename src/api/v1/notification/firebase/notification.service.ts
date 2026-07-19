@@ -1,18 +1,41 @@
 import { Injectable } from '@nestjs/common';
 import * as admin from 'firebase-admin';
 import { NotificationDto } from '../dto/notification.dto';
-import * as firebaseAccount from './proxy-server-99cc2-firebase-adminsdk-oheag-108807e62a.json';
 import { Device } from '../../device/schema/device.schema';
+
 @Injectable()
 export class FirebaseNotificationService {
   onModuleInit() {
     if (!admin.apps.length) {
       admin.initializeApp({
-        credential: admin.credential.cert(
-          firebaseAccount as admin.ServiceAccount,
-        ),
+        credential: this.getCredential(),
       });
     }
+  }
+
+  private getCredential(): admin.credential.Credential {
+    const projectId = process.env.FIREBASE_PROJECT_ID;
+    const clientEmail = process.env.FIREBASE_CLIENT_EMAIL;
+    const privateKey = process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n');
+
+    const configuredValues = [projectId, clientEmail, privateKey].filter(
+      Boolean,
+    ).length;
+    if (configuredValues === 0) {
+      return admin.credential.applicationDefault();
+    }
+
+    if (configuredValues !== 3) {
+      throw new Error(
+        'FIREBASE_PROJECT_ID, FIREBASE_CLIENT_EMAIL, and FIREBASE_PRIVATE_KEY must all be set',
+      );
+    }
+
+    return admin.credential.cert({
+      projectId,
+      clientEmail,
+      privateKey,
+    });
   }
 
   async sendNotification(

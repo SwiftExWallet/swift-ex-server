@@ -14,8 +14,10 @@ import { StellarModule } from '../stellar/stellar.module';
 import { NotificationModule } from '../notification/notification.module';
 import { AlchemyModule } from '../alchemy/alchemy.module';
 import { WalletSyncFailedService } from './wallet-sync-failed.service';
-import { WalletSyncFailed, WalletSyncFailedSchema } from './schema/wallet-sync-failed.schema';
-
+import {
+  WalletSyncFailed,
+  WalletSyncFailedSchema,
+} from './schema/wallet-sync-failed.schema';
 
 @Module({
   imports: [
@@ -29,7 +31,13 @@ import { WalletSyncFailed, WalletSyncFailedSchema } from './schema/wallet-sync-f
     NotificationModule,
     AlchemyModule,
   ],
-  providers: [WalletService, WalletRepository, ActivatedWalletRepository,WalletSyncFailedService],
+  providers: [
+    WalletService,
+    WalletRepository,
+    ActivatedWalletRepository,
+    WalletSyncFailedService,
+  ],
+  exports: [WalletRepository],
   controllers: [WalletController],
 })
 export class WalletModule {}

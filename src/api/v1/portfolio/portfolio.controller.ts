@@ -11,7 +11,9 @@ export class PortfolioController {
     @Res() response,
     @Param('address') address: string,
   ) {
-    const tokens = await this.portfolioService.getPortfolioByAddress(address);
+    const portfolioAddress = req.walletAddress ?? address;
+    const tokens =
+      await this.portfolioService.getPortfolioByAddress(portfolioAddress);
     response.status(201).json(tokens.data);
   }
 }

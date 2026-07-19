@@ -8,12 +8,15 @@ import { UserQueueService } from '../../../common/user-queue/user-queue.service'
 
 @Controller('api/v1/alchemy/')
 export class AlchemyController {
-  constructor(private readonly alchemyService: AlchemyService ,private userQueueService: UserQueueService) {}
+  constructor(
+    private readonly alchemyService: AlchemyService,
+    private userQueueService: UserQueueService,
+  ) {}
 
   @Post('fetch-quotes')
   async fetchQuotes(@Res() response: Response, @Body() quotesDto: QuotesDto) {
     return this.userQueueService.processUserRequest(async () => {
-      console.log("Processing user ");
+      console.log('Processing user ');
       const quotesRes = await this.alchemyService.fetchQuotes(quotesDto);
       response.send({ success: quotesRes.status, data: quotesRes.data });
     });
@@ -25,8 +28,12 @@ export class AlchemyController {
     @Res() response: Response,
     @Body() createBuyOrderDto: CreateBuyOrderDto,
   ) {
+    const orderPayload = {
+      ...createBuyOrderDto,
+      address: req.walletAddress ?? createBuyOrderDto.address,
+    };
     const quotesRes = await this.alchemyService.orderCreate(
-      createBuyOrderDto,
+      orderPayload,
       req.currentUser,
     );
     response.send({ success: quotesRes });
