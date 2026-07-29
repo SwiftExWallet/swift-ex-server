@@ -31,5 +31,6 @@ import { WalletSyncFailed, WalletSyncFailedSchema } from './schema/wallet-sync-f
   ],
   providers: [WalletService, WalletRepository, ActivatedWalletRepository,WalletSyncFailedService],
   controllers: [WalletController],
+  exports: [WalletService],
 })
 export class WalletModule {}
