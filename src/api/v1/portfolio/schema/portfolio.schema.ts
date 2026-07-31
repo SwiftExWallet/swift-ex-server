@@ -60,7 +60,7 @@ export class Portfolio {
 
   @Prop({
     type: String,
-    enum: PortfolioSyncStatus,
+    enum: Object.values(PortfolioSyncStatus),
     default: PortfolioSyncStatus.idle,
   })
   syncStatus: PortfolioSyncStatus;
@@ -76,10 +76,12 @@ export class Portfolio {
 
   @Prop({ type: String, default: null })
   lastSyncError: string | null;
+
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 export const PortfolioSchema = SchemaFactory.createForClass(Portfolio);
 
-PortfolioSchema.index({ deviceId: 1, address: 1 }, { unique: true });
-PortfolioSchema.index({ address: 1 });
+PortfolioSchema.index({ address: 1 }, { unique: true });
 PortfolioSchema.index({ stale: 1, lastSyncedAt: 1 });
