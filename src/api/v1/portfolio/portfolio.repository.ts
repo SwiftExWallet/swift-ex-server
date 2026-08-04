@@ -9,11 +9,10 @@ export class PortfolioRepository {
     @InjectModel(Portfolio.name) private portfolioModel: Model<Portfolio>,
   ) {}
 
-  findByDeviceAndAddress(
-    deviceId: string,
-    address: string,
-  ): Promise<Portfolio | null> {
-    return this.portfolioModel.findOne({ deviceId, address });
+  findByAddress(address: string): Promise<Portfolio | null> {
+    return this.portfolioModel
+      .findOne({ address })
+      .sort({ lastSyncedAt: -1 });
   }
 
   upsert(
@@ -23,9 +22,10 @@ export class PortfolioRepository {
     totalValueUsd: string,
   ): Promise<Portfolio> {
     return this.portfolioModel.findOneAndUpdate(
-      { deviceId, address },
+      { address },
       {
         $set: {
+          deviceId,
           tokens,
           totalValueUsd,
           stale: false,
@@ -38,22 +38,29 @@ export class PortfolioRepository {
     ) as unknown as Promise<Portfolio>;
   }
 
-  markSyncing(deviceId: string, address: string) {
+  markSyncing(address: string) {
     return this.portfolioModel.updateOne(
-      { deviceId, address },
+      { address },
       { $set: { syncStatus: PortfolioSyncStatus.syncing } },
     );
   }
 
-  markFailed(deviceId: string, address: string, error: string) {
+  markFailed(address: string, error: string) {
     return this.portfolioModel.updateOne(
-      { deviceId, address },
+      { address },
       {
         $set: {
           syncStatus: PortfolioSyncStatus.failed,
           lastSyncError: error,
         },
       },
+    );
+  }
+
+  updateDevice(address: string, deviceId: string) {
+    return this.portfolioModel.updateOne(
+      { address },
+      { $set: { deviceId } },
     );
   }
 

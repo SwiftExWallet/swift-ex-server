@@ -10,6 +10,8 @@ import { AlchemyPortfolioResponse } from './interfaces/portfolio-sync.interface'
 export class PortfolioService {
   private readonly logger = new Logger(PortfolioService.name);
   private readonly url: string;
+  private readonly SYNC_TTL_MS =
+    Number(process.env.PORTFOLIO_SYNC_TTL_SECONDS ?? 35) * 1000;
 
   constructor(
     private readonly httpService: HttpService,
@@ -22,15 +24,21 @@ export class PortfolioService {
   async getPortfolio(
     deviceId: string,
     address: string,
+    hardRefresh = false,
   ): Promise<AlchemyPortfolioResponse> {
-    const existing = await this.portfolioRepository.findByDeviceAndAddress(
-      deviceId,
-      address,
-    );
+    const existing = await this.portfolioRepository.findByAddress(address);
 
-    const isFresh = !!existing && !existing.stale;
+    const canForceRefresh =
+      hardRefresh &&
+      !!existing?.lastSyncedAt &&
+      Date.now() - existing.lastSyncedAt.getTime() >= this.SYNC_TTL_MS;
 
-    if (isFresh) {
+    const shouldFetch = !existing || existing.stale || canForceRefresh;
+
+    if (!shouldFetch) {
+      if (String(existing.deviceId) !== String(deviceId)) {
+        await this.portfolioRepository.updateDevice(address, deviceId);
+      }
       return this.portfolioMapper.toAlchemyResponse(existing as Portfolio);
     }
 
@@ -53,7 +61,6 @@ export class PortfolioService {
       
       if (existing) {
         await this.portfolioRepository.markFailed(
-          deviceId,
           address,
           (error as Error).message,
         );
