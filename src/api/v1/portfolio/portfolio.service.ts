@@ -26,6 +26,8 @@ export class PortfolioService {
     address: string,
     hardRefresh = false,
   ): Promise<AlchemyPortfolioResponse> {
+    address = address.toLowerCase();
+
     const existing = await this.portfolioRepository.findByAddress(address);
 
     const canForceRefresh =
