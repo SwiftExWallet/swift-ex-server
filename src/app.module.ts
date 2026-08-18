@@ -24,6 +24,7 @@ import { AppAvailableModule } from './api/v1/app-available/app-available.module'
 import { PortfolioModule } from './api/v1/portfolio/portfolio.module';
 import { BanxaModule } from './api/v1/banxa/banxa.module';
 import { MoonPayModule } from './api/v1/moonpay/moonpay.module';
+import { SigningModule } from './api/v1/signing/signing.module';
 
 @Module({
   imports: [
@@ -96,7 +97,8 @@ import { MoonPayModule } from './api/v1/moonpay/moonpay.module';
     AppAvailableModule,
     PortfolioModule,
     BanxaModule,
-    MoonPayModule
+    MoonPayModule,
+    SigningModule,
   ],
   controllers: [AppController],
   providers: [AppService],
@@ -128,6 +130,14 @@ export class AppModule {
         },
         {
           path: '/api/v1/moonpay/webhook',
+          method: RequestMethod.POST,
+        },
+        {
+          path: '/api/v1/signing/request',
+          method: RequestMethod.GET,
+        },
+        {
+          path: '/api/v1/signing/verify',
           method: RequestMethod.POST,
         },
       )
@@ -266,6 +276,14 @@ export class AppModule {
         },
         {
           path: '/api/v1/moonpay/webhook',
+          method: RequestMethod.POST,
+        },
+        {
+          path: '/api/v1/signing/request',
+          method: RequestMethod.GET,
+        },
+        {
+          path: '/api/v1/signing/verify',
           method: RequestMethod.POST,
         },
       )
