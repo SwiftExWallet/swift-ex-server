@@ -205,7 +205,7 @@ src/
 
 ## License
 
-This project is licensed under the MIT License.
+This project is licensed under the Apache License 2.0. See [LICENSE](https://github.com/SwiftExWallet/swift-ex-server/blob/main/LICENSE) for the full text.
 
 ## Support
 
